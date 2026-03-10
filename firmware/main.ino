@@ -1,11 +1,11 @@
 #include <WiFi.h>
 #include <FirebaseESP32.h>
 
-// WiFi Bağlantı Bilgileri 
-#define WIFI_SSID "WIFI_ADINI_BURAYA_YAZ"
-#define WIFI_PASSWORD "WIFI_SIFRESINI_BURAYA_YAZ"
+// WiFi Bağlantı Bilgileri (Wokwi simülasyonu için sabit)
+#define WIFI_SSID "Wokwi-GUEST"
+#define WIFI_PASSWORD ""
 
-// Firebase Bilgileri
+// Senin Firebase Bilgilerin
 #define API_KEY "AIzaSyB5VTUokAVSnmQUocsT1Ub7pOoxtCXKr4w" 
 #define DATABASE_URL "https://smart-greenhouse-9fb8e-default-rtdb.europe-west1.firebasedatabase.app" 
 
@@ -35,13 +35,33 @@ void setup() {
 }
 
 void loop() {
-  // ÖRNEK TEST: Firebase'deki sıcaklık değerini 25 olarak güncelle
-  // Gerçek sensör bağlandığında "25" yerine sensör değişkenini yazacak.
-  if (Firebase.setFloat(fbdo, "/Greenhouse/Sensors/temp", 25.5)) {
-    Serial.println("Veri basariyla gonderildi: Greenhouse/Sensors/temp");
+  // 1. JSON OBJESİ OLUŞTURMA 
+  FirebaseJson json;
+
+  // Şimdilik sensörler bağlı olmadığı için test değerleri gönderiyoruz
+  // Gerçek sensörler bağlandığında buradaki rakamlar değişkenle değiştirilecek
+  json.set("temp", 26.8);          // Sıcaklık
+  json.set("humidity", 44.5);      // Nem
+  json.set("lux", 550);            // Işık şiddeti
+  json.set("soil_moisture", 65);   // Toprak nemi
+  json.set("CO2", 415);            // Karbon dioksit
+
+  // 2. TÜM PAKETİ TEK SEFERDE GÖNDERME
+  if (Firebase.set(fbdo, "/Greenhouse/Sensors", json)) {
+    Serial.println(">>> Tüm sensör verileri başarıyla paketiyle gönderildi!");
   } else {
     Serial.println("Hata: " + fbdo.errorReason());
   }
 
-  delay(10000); // 10 saniyede bir gönder
+  // 3. KONTROL DÜĞMESİNİ DİNLEME 
+  if (Firebase.getInt(fbdo, "/Greenhouse/Controls/pump")) {
+    int pumpStatus = fbdo.intData();
+    if (pumpStatus == 1) {
+      Serial.println("--- UYARI: Su Pompası AKTİF ---");
+    } else {
+      Serial.println("--- Su Pompası KAPALI ---");
+    }
+  }
+
+  delay(5000); // 5 saniyede bir güncelleme 
 }
