@@ -1,6 +1,6 @@
 #include <WiFi.h>
 #include <FirebaseESP32.h>
-
+..
 // WiFi Bağlantı Bilgileri (Wokwi simülasyonu için sabit)
 #define WIFI_SSID "Wokwi-GUEST"
 #define WIFI_PASSWORD ""
