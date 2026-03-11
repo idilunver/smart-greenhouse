@@ -67,3 +67,11 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+
+# Backend Security
+backend/serviceAccountKey.json
+
+# Python
+backend/venv/
+backend/__pycache__/
+*.pyc
