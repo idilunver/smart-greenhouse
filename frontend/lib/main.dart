@@ -21,7 +21,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData(primarySwatch: Colors.green, useMaterial3: true),
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.green,
+        useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+      ),
       home: const GreenhouseDashboard(),
     );
   }
@@ -34,49 +39,108 @@ class GreenhouseDashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     DatabaseReference sensorsRef = FirebaseDatabase.instance.ref("Greenhouse/Sensors");
     DatabaseReference pumpRef = FirebaseDatabase.instance.ref("Greenhouse/Controls/pump");
+    DatabaseReference fanRef = FirebaseDatabase.instance.ref("Greenhouse/Controls/fan"); // Fan referansı eklendi
+    DatabaseReference adviceRef = FirebaseDatabase.instance.ref("Greenhouse/AI_Analysis/advice");
 
     return Scaffold(
-      appBar: AppBar(title: const Text("🌿 Akıllı Sera Kontrol"), centerTitle: true),
+      appBar: AppBar(
+        title: const Text("🌿 Sera Kontrol Sistemi", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        centerTitle: true,
+        backgroundColor: Colors.green[800],
+        foregroundColor: Colors.white,
+      ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(12.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // SENSÖR VERİLERİ PANELİ
+              // --- ANALİZ BÖLÜMÜ ---
+              StreamBuilder(
+                stream: adviceRef.onValue,
+                builder: (context, snapshot) {
+                  String advice = snapshot.data?.snapshot.value?.toString() ?? "Veri bekleniyor...";
+                  return Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey[300]!)),
+                    child: ListTile(
+                      leading: const Icon(Icons.tips_and_updates, color: Colors.orange),
+                      title: Text(advice, style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic)),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+
+              // --- SENSÖR GRİD ---
+              const Text("📊 Canlı Veriler", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 10),
               StreamBuilder(
                 stream: sensorsRef.onValue,
                 builder: (context, snapshot) {
                   if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
                     Map<dynamic, dynamic> data = snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
-                    return Column(
+                    return GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                      childAspectRatio: 0.9,
                       children: [
-                        _buildSensorCard("Sıcaklık", "${data['temp']}°C", Icons.thermostat, Colors.red),
-                        _buildSensorCard("Nem", "%${data['humidity']}", Icons.water_drop, Colors.blue),
-                        _buildSensorCard("Işık", "${data['lux']} Lux", Icons.wb_sunny, Colors.orange),
-                        _buildSensorCard("Toprak Nemi", "%${data['soil_moisture']}", Icons.Grass, Colors.brown),
-                        _buildSensorCard("CO2", "${data['CO2']} ppm", Icons.cloud, Colors.grey),
+                        _buildSmallCard("Sıcaklık", data['temp'], "°C", Icons.thermostat, Colors.orange),
+                        _buildSmallCard("Toprak", data['soil_moisture'], "%", Icons.opacity, Colors.brown),
+                        _buildSmallCard("Işık", data['light_lux'], " Lx", Icons.wb_sunny, Colors.amber),
+                        _buildSmallCard("Nem", data['humidity'], "%", Icons.water, Colors.blue),
+                        _buildSmallCard("CO2", data['CO2'], " p", Icons.co2, Colors.blueGrey),
+                        _buildSmallCard("Sistem", "Aktif", "", Icons.check_circle, Colors.green),
                       ],
                     );
                   }
                   return const Center(child: CircularProgressIndicator());
                 },
               ),
-              const Divider(height: 40),
-              // KONTROL PANELİ
-              StreamBuilder(
-                stream: pumpRef.onValue,
-                builder: (context, snapshot) {
-                  bool isPumpOn = (snapshot.data?.snapshot.value == 1);
-                  return ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isPumpOn ? Colors.red : Colors.green,
-                      minimumSize: const Size(double.infinity, 60),
+              const SizedBox(height: 30),
+
+              // --- KONTROL PANELİ (POMPA & FAN) ---
+              const Text("⚙️ Cihaz Kontrolü", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  // SU POMPASI BUTONU
+                  Expanded(
+                    child: StreamBuilder(
+                      stream: pumpRef.onValue,
+                      builder: (context, snapshot) {
+                        bool isOn = (snapshot.data?.snapshot.value == 1);
+                        return _buildControlButton(
+                          title: isOn ? "Pompa: AÇIK" : "Pompa: KAPALI",
+                          isOn: isOn,
+                          icon: Icons.water_drop,
+                          color: Colors.blue,
+                          onPressed: () => pumpRef.set(isOn ? 0 : 1),
+                        );
+                      },
                     ),
-                    onPressed: () => pumpRef.set(isPumpOn ? 0 : 1),
-                    icon: Icon(isPumpOn ? Icons.stop : Icons.play_arrow, color: Colors.white),
-                    label: Text(isPumpOn ? "SU POMPASINI DURDUR" : "SU POMPASINI ÇALIŞTIR", style: const TextStyle(color: Colors.white)),
-                  );
-                },
+                  ),
+                  const SizedBox(width: 10),
+                  // FAN BUTONU
+                  Expanded(
+                    child: StreamBuilder(
+                      stream: fanRef.onValue,
+                      builder: (context, snapshot) {
+                        bool isOn = (snapshot.data?.snapshot.value == 1);
+                        return _buildControlButton(
+                          title: isOn ? "Fan: AÇIK" : "Fan: KAPALI",
+                          isOn: isOn,
+                          icon: Icons.air,
+                          color: Colors.cyan,
+                          onPressed: () => fanRef.set(isOn ? 0 : 1),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -85,14 +149,47 @@ class GreenhouseDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildSensorCard(String title, String value, IconData icon, Color color) {
-    return Card(
-      elevation: 4,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: ListTile(
-        leading: Icon(icon, color: color, size: 30),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        trailing: Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+  // Sensör Kartı Tasarımı
+  Widget _buildSmallCard(String title, dynamic value, String unit, IconData icon, Color color) {
+    String displayValue = (value != null) ? "$value$unit" : "---";
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 4),
+          Text(title, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+          Text(displayValue, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  // Kontrol Butonu Tasarımı (Yeni)
+  Widget _buildControlButton({required String title, required bool isOn, required IconData icon, required Color color, required VoidCallback onPressed}) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isOn ? color : Colors.white,
+        foregroundColor: isOn ? Colors.white : Colors.black87,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(vertical: 15),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: isOn ? Colors.transparent : Colors.grey[300]!),
+        ),
+      ),
+      onPressed: onPressed,
+      child: Column(
+        children: [
+          Icon(icon, size: 28),
+          const SizedBox(height: 5),
+          Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+        ],
       ),
     );
   }
