@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:fl_chart/fl_chart.dart'; // Mevcut kullanım için kalsın
-import 'package:syncfusion_flutter_charts/charts.dart'; // Yeni eklenen profesyonel grafikler
+import 'package:fl_chart/fl_chart.dart'; 
+import 'package:syncfusion_flutter_charts/charts.dart'; 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -77,7 +77,7 @@ class DashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     DatabaseReference sensorsRef = FirebaseDatabase.instance.ref("Greenhouse/Sensors");
-    DatabaseReference adviceRef = FirebaseDatabase.instance.ref("Greenhouse/AI_Analysis/advice");
+    DatabaseReference aiRef = FirebaseDatabase.instance.ref("Greenhouse/AI_Analysis");
 
     return Scaffold(
       appBar: AppBar(title: const Text("🌿 Akıllı Sera Paneli", style: TextStyle(fontWeight: FontWeight.bold))),
@@ -87,9 +87,9 @@ class DashboardPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             StreamBuilder(
-              stream: adviceRef.onValue,
+              stream: aiRef.onValue,
               builder: (context, snapshot) {
-                String advice = snapshot.data?.snapshot.value?.toString() ?? "Veri bekleniyor...";
+                Map aiData = (snapshot.data?.snapshot.value as Map?) ?? {"advice": "Veri bekleniyor...", "et_rate": 0};
                 return Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
@@ -100,9 +100,15 @@ class DashboardPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Row(children: [Icon(Icons.psychology, color: Colors.white), SizedBox(width: 8), Text("Anlık AI Tavsiyesi", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))]),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Row(children: [Icon(Icons.psychology, color: Colors.white), SizedBox(width: 8), Text("Anlık AI Tavsiyesi", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))]),
+                          Text("ET Oranı: ${aiData['et_rate']}", style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
                       const SizedBox(height: 10),
-                      Text(advice, style: const TextStyle(color: Colors.white, fontSize: 13, fontStyle: FontStyle.italic)),
+                      Text(aiData['advice'].toString().replaceAll('"', ''), style: const TextStyle(color: Colors.white, fontSize: 13, fontStyle: FontStyle.italic)),
                     ],
                   ),
                 );
@@ -116,6 +122,7 @@ class DashboardPage extends StatelessWidget {
               builder: (context, snapshot) {
                 if (!snapshot.hasData || snapshot.data?.snapshot.value == null) return const Center(child: CircularProgressIndicator());
                 Map data = snapshot.data!.snapshot.value as Map;
+                
                 return GridView.count(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -124,11 +131,13 @@ class DashboardPage extends StatelessWidget {
                   mainAxisSpacing: 15,
                   childAspectRatio: 1.1,
                   children: [
-                    _buildProCard("Sıcaklık", "${data['temp']}", "°C", Icons.thermostat, Colors.orange, "Stabil"),
-                    _buildProCard("Hava Nemi", "${data['humidity']}", "%", Icons.water_drop, Colors.blue, "Normal"),
-                    _buildProCard("Toprak Nemi", "${data['soil_moisture']}", "%", Icons.grass, Colors.brown, "İdeal"),
-                    _buildProCard("Işık Gücü", "${data['light_lux']}", " Lx", Icons.wb_sunny, Colors.amber, "Yeterli"),
-                    _buildProCard("CO2 Seviyesi", "${data['CO2']}", " ppm", Icons.cloud, Colors.blueGrey, "Güvenli"),
+                    _buildProCard("İç Sıcaklık", "${data['temp_inner'] ?? '0'}", "°C", Icons.thermostat, Colors.orange, "Stabil"),
+                    _buildProCard("Dış Sıcaklık", "${data['temp_outer'] ?? '0'}", "°C", Icons.wb_cloudy, Colors.blueGrey, "Referans"),
+                    _buildProCard("İç Nem", "${data['humidity_inner'] ?? '0'}", "%", Icons.water_drop, Colors.blue, "Normal"),
+                    _buildProCard("Dış Nem", "${data['humidity_outer'] ?? '0'}", "%", Icons.air, Colors.cyan, "Normal"),
+                    _buildProCard("Toprak Nemi", "${data['soil_moisture'] ?? '0'}", "%", Icons.grass, Colors.brown, "İdeal"),
+                    _buildProCard("Işık Gücü", "${data['light_lux'] ?? '0'}", " Lx", Icons.wb_sunny, Colors.amber, "Yeterli"),
+                    _buildProCard("CO2 Seviyesi", "${data['CO2'] ?? '0'}", " ppm", Icons.cloud, Colors.blueGrey, "Güvenli"),
                     _buildProCard("Sistem Gücü", "12.4", "V", Icons.bolt, Colors.green, "Aktif"),
                   ],
                 );
@@ -156,25 +165,25 @@ class DashboardPage extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w600)),
+              Text(title, style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.w600)),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
-                  Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  Text(unit, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(unit, style: const TextStyle(fontSize: 11, color: Colors.grey)),
                 ],
               ),
             ],
           ),
-          Text("● $status", style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.bold)),
+          Text("● $status", style: TextStyle(fontSize: 9, color: color, fontWeight: FontWeight.bold)),
         ],
       ),
     );
   }
 }
 
-// --- 2. SAYFA: AI ANALİZ & CHAT (Dikey Bölünmüş) ---
+// --- 2. SAYFA: AI ANALİZ & CHAT ---
 class AIChatAnalysisPage extends StatefulWidget {
   const AIChatAnalysisPage({super.key});
   @override
@@ -267,30 +276,36 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
   }
 }
 
-// --- 3. SAYFA: PROFESYONEL GRAFİKLER (Syncfusion) ---
+// --- 3. SAYFA: PROFESYONEL GRAFİKLER ---
 class ChartsPage extends StatelessWidget {
   const ChartsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Örnek veri setleri (Firebase listeleriyle bağlandığında otomatik güncellenir)
-    final List<ChartDataPoint> tempHistory = [
-      ChartDataPoint(0, 22), ChartDataPoint(1, 24), ChartDataPoint(2, 28), ChartDataPoint(3, 26), ChartDataPoint(4, 30), ChartDataPoint(5, 27),
-    ];
-    final List<ChartDataPoint> humidityHistory = [
-      ChartDataPoint(0, 45), ChartDataPoint(1, 50), ChartDataPoint(2, 48), ChartDataPoint(3, 55), ChartDataPoint(4, 52), ChartDataPoint(5, 49),
-    ];
+    // Statik veri noktaları (Firebase History bağlandığında burası dinamikleşecek)
+    final List<ChartDataPoint> tempHistory = [ChartDataPoint(0, 22), ChartDataPoint(1, 24), ChartDataPoint(2, 28), ChartDataPoint(3, 26), ChartDataPoint(4, 30), ChartDataPoint(5, 27)];
+    final List<ChartDataPoint> humidityHistory = [ChartDataPoint(0, 45), ChartDataPoint(1, 50), ChartDataPoint(2, 48), ChartDataPoint(3, 55), ChartDataPoint(4, 52), ChartDataPoint(5, 49)];
+    final List<ChartDataPoint> soilHistory = [ChartDataPoint(0, 35), ChartDataPoint(1, 38), ChartDataPoint(2, 34), ChartDataPoint(3, 40), ChartDataPoint(4, 38)];
+    final List<ChartDataPoint> luxHistory = [ChartDataPoint(0, 400), ChartDataPoint(1, 500), ChartDataPoint(2, 600), ChartDataPoint(3, 450), ChartDataPoint(4, 550)];
+    final List<ChartDataPoint> co2History = [ChartDataPoint(0, 380), ChartDataPoint(1, 400), ChartDataPoint(2, 420), ChartDataPoint(3, 400), ChartDataPoint(4, 410)];
+    final List<ChartDataPoint> voltageHistory = [ChartDataPoint(0, 12.1), ChartDataPoint(1, 12.4), ChartDataPoint(2, 12.3), ChartDataPoint(3, 12.4), ChartDataPoint(4, 12.4)];
 
     return Scaffold(
       appBar: AppBar(title: const Text("Detaylı Grafik Analizi", style: TextStyle(fontWeight: FontWeight.bold))),
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
-          _buildSfChart("Sıcaklık Değişimi (°C)", tempHistory, Colors.orange, "°C", 15, 40, true),
+          _buildSfChart("İç Sıcaklık Değişimi (°C)", tempHistory, Colors.orange, "°C", 15, 40, true),
           const SizedBox(height: 15),
-          _buildSfChart("Hava Nemi (%)", humidityHistory, Colors.blue, "%", 0, 100, false),
+          _buildSfChart("İç Nem Değişimi (%)", humidityHistory, Colors.blue, "%", 0, 100, false),
           const SizedBox(height: 15),
-          _buildSfChart("Toprak Nemi (%)", [ChartDataPoint(0, 30), ChartDataPoint(5, 45)], Colors.brown, "%", 0, 100, false),
+          _buildSfChart("Toprak Nemi (%)", soilHistory, Colors.brown, "%", 0, 100, false),
+          const SizedBox(height: 15),
+          _buildSfChart("Işık Şiddeti (Lux)", luxHistory, Colors.amber, " Lx", 0, 1000, false),
+          const SizedBox(height: 15),
+          _buildSfChart("CO2 Konsantrasyonu (ppm)", co2History, Colors.blueGrey, " ppm", 300, 1000, false),
+          const SizedBox(height: 15),
+          _buildSfChart("Sistem Voltajı (V)", voltageHistory, Colors.green, "V", 10, 15, false),
         ],
       ),
     );
@@ -362,7 +377,7 @@ class ControlPage extends StatelessWidget {
               child: StreamBuilder(
                 stream: controlRef.child("auto_mode").onValue,
                 builder: (context, snapshot) {
-                  bool isAuto = snapshot.data?.snapshot.value == 1;
+                  bool isAuto = (snapshot.data?.snapshot.value ?? 0).toString() == "1";
                   return SwitchListTile(title: const Text("Otomatik Mod", style: TextStyle(fontWeight: FontWeight.bold)), subtitle: const Text("Sensörlere göre AI müdahale"), value: isAuto, onChanged: (val) => controlRef.update({"auto_mode": val ? 1 : 0}));
                 },
               ),
@@ -371,6 +386,8 @@ class ControlPage extends StatelessWidget {
             _buildActionTile(controlRef, "pump", "Su Pompası", Icons.water_drop, Colors.blue),
             const SizedBox(height: 15),
             _buildActionTile(controlRef, "fan", "Tahliye Fanı", Icons.air, Colors.cyan),
+            const SizedBox(height: 15),
+            _buildActionTile(controlRef, "light", "Grow Light", Icons.lightbulb, Colors.amber),
           ],
         ),
       ),
@@ -381,7 +398,7 @@ class ControlPage extends StatelessWidget {
     return StreamBuilder(
       stream: ref.child(key).onValue,
       builder: (context, snapshot) {
-        bool isOn = snapshot.data?.snapshot.value == 1;
+        bool isOn = (snapshot.data?.snapshot.value ?? 0).toString() == "1";
         return Container(
           decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: isOn ? color : Colors.transparent, width: 2)),
           child: ListTile(
