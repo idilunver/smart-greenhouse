@@ -15,8 +15,7 @@ class AIService {
           "Sen 'Smart Greenhouse' sisteminin beynisin. Bir ziraat mühendisi ve veri analisti gibi davran. "
           "Sana JSON formatında sensör verileri gelecek. Veriler normalse 'Sistem stabil' de. "
           "Eğer bir parametre bitki sağlığını tehdit ediyorsa (Örn: Nem %40'ın altındaysa) hemen teknik bir uyarı yap ve "
-          "aktüatör (fan, pompa vb.) önerisinde bulun. Kısa, net ve aksiyon odaklı ol. "
-          "Kullanıcıya ismiyle hitap etme."
+          "aktüatör (fan, pompa vb.) önerisinde bulun. Kısa, net ve aksiyon odaklı ol."
         ),
       );
     }

@@ -14,7 +14,10 @@ class DashboardPage extends StatelessWidget {
       backgroundColor: const Color(0xFFF8FAF8),
       appBar: AppBar(
         title: const Text("🌿 Akıllı Sera Paneli", style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true, elevation: 0, backgroundColor: Colors.white, foregroundColor: Colors.black,
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
       ),
       body: StreamBuilder(
         stream: sensorsRef.onValue,
@@ -37,6 +40,7 @@ class DashboardPage extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // ARTIK BURASI CANLI DİNLENİYOR
                     Expanded(flex: 3, child: _buildAISection(aiRef)),
                     const SizedBox(width: 12),
                     Expanded(flex: 2, child: _buildEventLog(controlRef)),
@@ -76,12 +80,24 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  // ── AI TAVSİYESİ KARTI ──
+  // ── AI TAVSİYESİ KARTI (CANLI GÜNCELLENEN VERSİYON) ──
   Widget _buildAISection(DatabaseReference aiRef) {
     return StreamBuilder(
       stream: aiRef.onValue,
       builder: (context, snapshot) {
-        Map aiData = (snapshot.data?.snapshot.value as Map?) ?? {"advice": "Veri bekleniyor...", "et_rate": 0};
+        // Firebase'den veri gelene kadar bekleme değerleri
+        String advice = "Analiz ediliyor...";
+        String etDisplay = "0.00";
+
+        if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
+          Map aiData = snapshot.data!.snapshot.value as Map;
+          advice = aiData['advice']?.toString() ?? advice;
+          
+          // et_rate değerini alıp 2 basamaklı formata sokuyoruz
+          var rawEt = aiData['et_rate'] ?? 0;
+          etDisplay = double.parse(rawEt.toString()).toStringAsFixed(2);
+        }
+
         return Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -100,12 +116,15 @@ class DashboardPage extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
-                    child: Text("ET: ${aiData['et_rate']}", style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                    child: Text("ET: $etDisplay", style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
-              Text(aiData['advice'].toString(), style: const TextStyle(color: Colors.white, fontSize: 13, fontStyle: FontStyle.italic, height: 1.4)),
+              Text(
+                advice, 
+                style: const TextStyle(color: Colors.white, fontSize: 13, fontStyle: FontStyle.italic, height: 1.4),
+              ),
             ],
           ),
         );
@@ -113,7 +132,7 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  // ── SON OLAYLAR (BİLDİRİM) KARTI ──
+  // ── SON OLAYLAR KARTI (SABİT KALDI) ──
   Widget _buildEventLog(DatabaseReference controlRef) {
     return StreamBuilder(
       stream: controlRef.onValue,
@@ -144,19 +163,19 @@ class DashboardPage extends StatelessWidget {
               const SizedBox(height: 12),
               _buildEventItem(
                 pumpOn ? "Pompa Çalışıyor" : "Pompa Kapalı",
-                pumpOn ? "Aktif olarak sulama yapılıyor" : "Bekleme modunda",
+                pumpOn ? "Aktif sulama" : "Beklemede",
                 Icons.water_drop,
                 pumpOn ? Colors.blue : Colors.grey,
               ),
               _buildEventItem(
                 fanOn ? "Fan Çalışıyor" : "Fan Kapalı",
-                fanOn ? "Havalandırma aktif" : "Bekleme modunda",
+                fanOn ? "Havalandırma aktif" : "Beklemede",
                 Icons.air,
                 fanOn ? Colors.cyan : Colors.grey,
               ),
               _buildEventItem(
                 lightOn ? "Işık Açık" : "Işık Kapalı",
-                lightOn ? "Grow light aktif" : "Bekleme modunda",
+                lightOn ? "Işık aktif" : "Beklemede",
                 Icons.lightbulb,
                 lightOn ? Colors.amber : Colors.grey,
               ),
@@ -166,8 +185,8 @@ class DashboardPage extends StatelessWidget {
                   Icon(autoMode ? Icons.smart_toy : Icons.pan_tool, size: 14, color: autoMode ? Colors.green : Colors.grey),
                   const SizedBox(width: 6),
                   Text(
-                    autoMode ? "Otonom Mod Aktif" : "Manuel Mod",
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: autoMode ? Colors.green[700] : Colors.grey[600]),
+                    autoMode ? "Otonom" : "Manuel",
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: autoMode ? Colors.green[700] : Colors.grey[600]),
                   ),
                 ],
               ),
@@ -189,8 +208,8 @@ class DashboardPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                Text(subtitle, style: TextStyle(fontSize: 10, color: Colors.grey[500])),
+                Text(title, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                Text(subtitle, style: TextStyle(fontSize: 9, color: Colors.grey[500])),
               ],
             ),
           ),
@@ -199,7 +218,6 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  // ── KRİTİK GÖSTERGE KARTI (Animasyonlu) ──
   Widget _buildCriticalCard(String title, String value, String unit, IconData icon, Color color, bool isAlert) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 500),
@@ -214,15 +232,15 @@ class DashboardPage extends StatelessWidget {
         children: [
           Icon(icon, color: isAlert ? Colors.red : color, size: 28),
           const SizedBox(height: 8),
-          Text(title, style: TextStyle(fontSize: 11, color: isAlert ? Colors.red : Colors.grey, fontWeight: FontWeight.bold)),
+          Text(title, style: TextStyle(fontSize: 10, color: isAlert ? Colors.red : Colors.grey, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isAlert ? Colors.red : Colors.black87)),
-              Text(unit, style: TextStyle(fontSize: 12, color: isAlert ? Colors.red[300] : Colors.grey)),
+              Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isAlert ? Colors.red : Colors.black87)),
+              Text(unit, style: TextStyle(fontSize: 11, color: isAlert ? Colors.red[300] : Colors.grey)),
             ],
           ),
           const SizedBox(height: 6),
@@ -234,7 +252,7 @@ class DashboardPage extends StatelessWidget {
             ),
             child: Text(
               isAlert ? "⚠️ DİKKAT" : "✅ Normal",
-              style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: isAlert ? Colors.red : Colors.green),
+              style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: isAlert ? Colors.red : Colors.green),
             ),
           ),
         ],
@@ -242,7 +260,6 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  // ── SENSÖR LİSTE ELEMANI ──
   Widget _buildSensorRow(String title, String value, IconData icon, Color color, String status) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
