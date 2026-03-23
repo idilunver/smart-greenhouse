@@ -53,7 +53,7 @@ class GreenhouseDashboard extends StatelessWidget {
                         _buildSensorCard("Sıcaklık", "${data['temp']}°C", Icons.thermostat, Colors.red),
                         _buildSensorCard("Nem", "%${data['humidity']}", Icons.water_drop, Colors.blue),
                         _buildSensorCard("Işık", "${data['lux']} Lux", Icons.wb_sunny, Colors.orange),
-                        _buildSensorCard("Toprak Nemi", "%${data['soil_moisture']}", Icons.Grass, Colors.brown),
+                        _buildSensorCard("Toprak Nemi", "%${data['soil_moisture']}", Icons.grass, Colors.brown),
                         _buildSensorCard("CO2", "${data['CO2']} ppm", Icons.cloud, Colors.grey),
                       ],
                     );
