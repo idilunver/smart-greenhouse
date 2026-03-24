@@ -56,7 +56,7 @@ class _ControlPageState extends State<ControlPage> {
                         builder: (context, snapshot) {
                           bool isAuto = (snapshot.data?.snapshot.value ?? 0).toString() == "1";
                           return SwitchListTile(
-                            title: const Text("智能 (AI) Otomatik Mod", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                            title: const Text("Otomatik Mod (AI)", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
                             subtitle: const Text("Ekstrem durumlarda AI koruma sağlar", style: TextStyle(color: Colors.white70, fontSize: 12)),
                             value: isAuto,
                             activeColor: Colors.white,
