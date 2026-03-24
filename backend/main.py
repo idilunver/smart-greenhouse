@@ -4,10 +4,18 @@ import time
 import math
 import os
 import google.generativeai as genai
+from dotenv import load_dotenv
+
+# --- Çevresel Değişkenleri Yükle ---
+load_dotenv()
 
 # --- Yapılandırma ---
 CERT_PATH = "serviceAccountKey.json"
-GEMINI_API_KEY = "AIzaSyBXhB8n33_guRAFCy3JBwsyP0_VRePPzHI" 
+# --- Yapılandırma (Çevresel Değişkenlerden) ---
+CERT_PATH = os.getenv("SERVICE_ACCOUNT_KEY_PATH", "serviceAccountKey.json")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+FIREBASE_DB_URL = os.getenv("FIREBASE_DATABASE_URL")
+
 AI_COOLDOWN = 300  # 5 dakika (Normal mod)
 CRITICAL_AI_COOLDOWN = 60 # 1 dakika (Kritik mod)
 HISTORY_INTERVAL = 600 # 10 dakika (Geçmiş veri kaydı için)
@@ -20,14 +28,17 @@ model = genai.GenerativeModel('gemini-flash-lite-latest')
 
 def initialize_firebase():
     if not firebase_admin._apps:
-        if not os.path.exists(CERT_PATH):
-            print(f"HATA: {CERT_PATH} bulunamadı!")
+        # Absürt yol hatalarını önlemek için absolute path kullanalım
+        abs_cert_path = os.path.abspath(CERT_PATH)
+        if not os.path.exists(abs_cert_path):
+            print(f"HATA: {abs_cert_path} bulunamadı! Lütfen Service Account JSON dosyasını kontrol edin.")
             return False
-        cred = credentials.Certificate(CERT_PATH)
+        
+        cred = credentials.Certificate(abs_cert_path)
         firebase_admin.initialize_app(cred, {
-            'databaseURL': 'https://smart-greenhouse-9fb8e-default-rtdb.europe-west1.firebasedatabase.app'
+            'databaseURL': FIREBASE_DB_URL
         })
-    print(">>> AI Destekli Sera Backend Sistemi Aktif...")
+    print(">>> AI Destekli Sera Backend Sistemi (Cloud Mode) Aktif...")
     return True
 
 def calculate_vpd(temp, humidity):

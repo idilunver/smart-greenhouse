@@ -3,14 +3,24 @@ from firebase_admin import credentials, db
 import random
 import time
 import os
+from dotenv import load_dotenv
+
+# --- Çevresel Değişkenleri Yükle ---
+load_dotenv()
 
 # --- Firebase Bağlantısı ---
-CERT_PATH = "serviceAccountKey.json"
+CERT_PATH = os.getenv("SERVICE_ACCOUNT_KEY_PATH", "serviceAccountKey.json")
+FIREBASE_DB_URL = os.getenv("FIREBASE_DATABASE_URL")
 
 if not firebase_admin._apps:
-    cred = credentials.Certificate(CERT_PATH)
+    abs_cert_path = os.path.abspath(CERT_PATH)
+    if not os.path.exists(abs_cert_path):
+        print(f"HATA: {abs_cert_path} bulunamadı!")
+        exit(1)
+        
+    cred = credentials.Certificate(abs_cert_path)
     firebase_admin.initialize_app(cred, {
-        'databaseURL': 'https://smart-greenhouse-9fb8e-default-rtdb.europe-west1.firebasedatabase.app'
+        'databaseURL': FIREBASE_DB_URL
     })
 
 # --- Dijital İkiz Durumu (State) ---
