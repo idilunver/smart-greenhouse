@@ -54,18 +54,18 @@ def get_gemini_advice(temp, hum, soil, vpd, et_rate, plants):
     except: pass
 
     prompt = f"""
-    Sen akıllı bir sera yönetim sisteminin ziraat mühendisi yapay zekasısın. 
-    Serada şu an yetiştirilen bitkiler: {plants_text}
+    Sen bu akıllı seranın yaşayan zekası ve dijital koruyucususun. Bir ziraat uzmanının bilgisine 
+    ve bir doğa dostunun sıcaklığına sahipsin. Bitkileri seven, onların dilinden anlayan bir yardımcı gibi konuş.
     
-    Şu anki veriler:
-    - İç Sıcaklık: {temp}°C (Trend: {trend_text})
-    - İç Nem: %{hum}
-    - Toprak Nemi: %{soil}
-    - VPD Değeri: {vpd} kPa
-    - Tahmini Buharlaşma (ET): {et_rate}
+    Şu an yetiştirilen bitkiler: {plants_text}
+    Veriler: Sıcaklık {temp}°C (Trend: {trend_text}), Nem %{hum}, Toprak Nemi %{soil}, VPD: {vpd} kPa.
 
-    Bu verilere, trend bilgilerine ve seçili bitki türlerine dayanarak bir tahminleme yap ve tavsiye ver. 
-    Eğer değerler kötüye gidiyorsa (trend kritikse) hemen uyar. Maksimum 20 kelime.
+    Talimatlar:
+    1. Kişi isimleri kullanma. Samimi ("Selam", "Merhaba" vb.) bir giriş yap.
+    2. Teknik verileri doğalca yedir ama sadece en kritik olanı seç, hepsini sayma.
+    3. Her şey yolundaysa ferahlatıcı bir onay ver.
+    4. Sorun varsa çözümünü nazikçe belirt.
+    5. Cevabı en fazla 2 kısa cümle ile sınırla.
     """
     try:
         response = model.generate_content(prompt)

@@ -24,89 +24,131 @@ class _ControlPageState extends State<ControlPage> {
     DatabaseReference settingsRef = FirebaseDatabase.instance.ref("Greenhouse/Settings");
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Sistem Kontrolü")),
-      body: SingleChildScrollView( // İçerik uzarsa kaydırılabilmesi için eklendi
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start, // Başlıklar için sola yasla
-          children: [
-            // --- OTOMATİK MOD ---
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20)),
-              child: StreamBuilder(
-                stream: controlRef.child("auto_mode").onValue,
-                builder: (context, snapshot) {
-                  bool isAuto = (snapshot.data?.snapshot.value ?? 0).toString() == "1";
-                  return SwitchListTile(
-                      title: const Text("Otomatik Mod",
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: const Text("Sensörlere göre AI müdahale"),
-                      value: isAuto,
-                      onChanged: (val) =>
-                          controlRef.update({"auto_mode": val ? 1 : 0}));
-                },
+      backgroundColor: const Color(0xFFF1F5F9),
+      appBar: AppBar(
+        title: const Text("Sistem Kontrolü", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        foregroundColor: Colors.black,
+      ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          bool isWide = constraints.maxWidth > 800;
+          
+          return Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: isWide ? 1000 : constraints.maxWidth),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // --- OTOMATİK MOD ---
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.green[700],
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [BoxShadow(color: Colors.green.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4))],
+                      ),
+                      child: StreamBuilder(
+                        stream: controlRef.child("auto_mode").onValue,
+                        builder: (context, snapshot) {
+                          bool isAuto = (snapshot.data?.snapshot.value ?? 0).toString() == "1";
+                          return SwitchListTile(
+                            title: const Text("智能 (AI) Otomatik Mod", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                            subtitle: const Text("Ekstrem durumlarda AI koruma sağlar", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                            value: isAuto,
+                            activeColor: Colors.white,
+                            onChanged: (val) => controlRef.update({"auto_mode": val ? 1 : 0}),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+
+                    // --- MANUEL KONTROLLER ---
+                    const Text("Manuel Müdahale Üniteleri", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: -0.5)),
+                    const SizedBox(height: 16),
+                    
+                    isWide 
+                      ? Row(
+                          children: [
+                            Expanded(child: _buildActionTile(controlRef, "pump", "Su Pompası", Icons.water_drop_rounded, Colors.blue)),
+                            const SizedBox(width: 16),
+                            Expanded(child: _buildActionTile(controlRef, "fan", "Tahliye Fanı", Icons.air_rounded, Colors.cyan)),
+                            const SizedBox(width: 16),
+                            Expanded(child: _buildActionTile(controlRef, "light", "Grow Light", Icons.lightbulb_rounded, Colors.amber)),
+                          ],
+                        )
+                      : Column(
+                          children: [
+                            _buildActionTile(controlRef, "pump", "Su Pompası", Icons.water_drop_rounded, Colors.blue),
+                            const SizedBox(height: 12),
+                            _buildActionTile(controlRef, "fan", "Tahliye Fanı", Icons.air_rounded, Colors.cyan),
+                            const SizedBox(height: 12),
+                            _buildActionTile(controlRef, "light", "Grow Light", Icons.lightbulb_rounded, Colors.amber),
+                          ],
+                        ),
+                    
+                    const SizedBox(height: 40),
+
+                    // --- BİTKİ SEÇİM ALANI ---
+                    const Text("Hedef Bitki Profilleme", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: -0.5)),
+                    const Text("AI analizleri bu verilere göre kalibre edilir.", style: TextStyle(fontSize: 13, color: Colors.grey)),
+                    const SizedBox(height: 20),
+                    
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)],
+                      ),
+                      child: StreamBuilder(
+                        stream: settingsRef.child("plants").onValue,
+                        builder: (context, snapshot) {
+                          List<dynamic> selectedPlants = [];
+                          if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
+                            selectedPlants = List.from(snapshot.data!.snapshot.value as List);
+                          }
+
+                          return Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: allPlants.map((plant) {
+                              final bool isSelected = selectedPlants.contains(plant);
+                              return FilterChip(
+                                label: Text(plant, style: TextStyle(color: isSelected ? Colors.green[900] : Colors.black87, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+                                selected: isSelected,
+                                selectedColor: Colors.green[100],
+                                checkmarkColor: Colors.green[800],
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: BorderSide(color: isSelected ? Colors.green : Colors.grey[300]!),
+                                ),
+                                onSelected: (bool selected) {
+                                  if (selected) {
+                                    selectedPlants.add(plant);
+                                  } else {
+                                    selectedPlants.remove(plant);
+                                  }
+                                  settingsRef.update({"plants": selectedPlants});
+                                },
+                              );
+                            }).toList(),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 30),
-
-            // --- MANUEL KONTROLLER ---
-            _buildActionTile(controlRef, "pump", "Su Pompası", Icons.water_drop, Colors.blue),
-            const SizedBox(height: 15),
-            _buildActionTile(controlRef, "fan", "Tahliye Fanı", Icons.air, Colors.cyan),
-            const SizedBox(height: 15),
-            _buildActionTile(controlRef, "light", "Grow Light", Icons.lightbulb, Colors.amber),
-            
-            const SizedBox(height: 40),
-
-            // --- BİTKİ SEÇİM ALANI (YENİ) ---
-            const Text(
-              "Yetiştirilen Bitkiler",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const Text(
-              "Gemini tavsiyelerini bu seçime göre özelleştirir.",
-              style: TextStyle(fontSize: 13, color: Colors.grey),
-            ),
-            const SizedBox(height: 15),
-            
-            StreamBuilder(
-              stream: settingsRef.child("plants").onValue,
-              builder: (context, snapshot) {
-                // Firebase'den seçili bitkileri çekiyoruz
-                List<dynamic> selectedPlants = [];
-                if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
-                  selectedPlants = List.from(snapshot.data!.snapshot.value as List);
-                }
-
-                return Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: allPlants.map((plant) {
-                    final bool isSelected = selectedPlants.contains(plant);
-                    return FilterChip(
-                      label: Text(plant),
-                      selected: isSelected,
-                      selectedColor: Colors.green[100],
-                      checkmarkColor: Colors.green,
-                      onSelected: (bool selected) {
-                        if (selected) {
-                          selectedPlants.add(plant);
-                        } else {
-                          selectedPlants.remove(plant);
-                        }
-                        // Firebase'e listeyi güncelle
-                        settingsRef.update({"plants": selectedPlants});
-                      },
-                    );
-                  }).toList(),
-                );
-              },
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

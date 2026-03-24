@@ -17,81 +17,80 @@ class ChartsPage extends StatelessWidget {
     final databaseRef = FirebaseDatabase.instance.ref('Greenhouse/History');
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
-        title: const Text("Detaylı Grafik Analizi", style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent,
+        title: const Text("Haftalık Analiz & Trendler", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        backgroundColor: Colors.white,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.file_download_outlined, color: Colors.green),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Haftalık Rapor (CSV) oluşturuluyor...")),
-              );
-            },
-          ),
-        ],
+        foregroundColor: Colors.black,
       ),
-      body: StreamBuilder(
-        stream: databaseRef.limitToLast(50).onValue, // Son 50 kaydı al
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          bool isWide = constraints.maxWidth > 900;
 
-          if (!snapshot.hasData || snapshot.data!.snapshot.value == null) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.history, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text("Henüz geçmiş veri toplanmadı...", style: TextStyle(color: Colors.grey)),
-                  Text("Bunu başlatmak için backend'in çalıştığından emin olun.", style: TextStyle(color: Colors.grey, fontSize: 12)),
-                ],
+          return Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: isWide ? 1200 : constraints.maxWidth),
+              child: StreamBuilder(
+                stream: databaseRef.limitToLast(50).onValue,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.snapshot.value == null) {
+                    return const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.analytics_outlined, size: 64, color: Colors.grey),
+                          SizedBox(height: 16),
+                          Text("Yeterli veri bulunamadı.", style: TextStyle(color: Colors.grey)),
+                        ],
+                      ),
+                    );
+                  }
+
+                  Map dataMap = snapshot.data!.snapshot.value as Map;
+                  List<MapEntry> entries = dataMap.entries.toList();
+                  entries.sort((a, b) => (a.value['timestamp'] as int).compareTo(b.value['timestamp'] as int));
+
+                  List<ChartDataPoint> tempHistory = [];
+                  List<ChartDataPoint> humidityHistory = [];
+                  List<ChartDataPoint> soilHistory = [];
+                  List<ChartDataPoint> luxHistory = [];
+                  List<ChartDataPoint> co2History = [];
+                  List<ChartDataPoint> voltageHistory = [];
+
+                  for (var entry in entries) {
+                    var val = entry.value;
+                    DateTime time = DateTime.fromMillisecondsSinceEpoch((val['timestamp'] as int) * 1000);
+                    tempHistory.add(ChartDataPoint(time, (val['temp'] ?? 0).toDouble()));
+                    humidityHistory.add(ChartDataPoint(time, (val['hum'] ?? 0).toDouble()));
+                    soilHistory.add(ChartDataPoint(time, (val['soil'] ?? 0).toDouble()));
+                    luxHistory.add(ChartDataPoint(time, (val['lux'] ?? 0).toDouble()));
+                    co2History.add(ChartDataPoint(time, (val['co2'] ?? 0).toDouble()));
+                    voltageHistory.add(ChartDataPoint(time, (val['voltage'] ?? 0).toDouble()));
+                  }
+
+                  return GridView.count(
+                    padding: const EdgeInsets.all(24),
+                    crossAxisCount: isWide ? 2 : 1,
+                    mainAxisSpacing: 24,
+                    crossAxisSpacing: 24,
+                    childAspectRatio: isWide ? 1.4 : 1.1,
+                    children: [
+                      _buildSfChart("İç Sıcaklık Değişimi (°C)", tempHistory, Colors.orange, "°C", 10, 45, true),
+                      _buildSfChart("Hava Nemi (%)", humidityHistory, Colors.blue, "%", 0, 100, false),
+                      _buildSfChart("Toprak Nemi (%)", soilHistory, Colors.brown, "%", 0, 100, false),
+                      _buildSfChart("Işık Şiddeti (Lux)", luxHistory, Colors.amber, " Lx", 0, 1200, false),
+                      _buildSfChart("CO2 Seviyesi (ppm)", co2History, Colors.blueGrey, " ppm", 300, 1200, false),
+                      _buildSfChart("Sistem Voltajı (V)", voltageHistory, Colors.green, "V", 10, 15, false),
+                    ],
+                  );
+                },
               ),
-            );
-          }
-
-          // Veriyi işle ve zamana göre sırala
-          Map dataMap = snapshot.data!.snapshot.value as Map;
-          List<MapEntry> entries = dataMap.entries.toList();
-          entries.sort((a, b) => (a.value['timestamp'] as int).compareTo(b.value['timestamp'] as int));
-
-          List<ChartDataPoint> tempHistory = [];
-          List<ChartDataPoint> humidityHistory = [];
-          List<ChartDataPoint> soilHistory = [];
-          List<ChartDataPoint> luxHistory = [];
-          List<ChartDataPoint> co2History = [];
-          List<ChartDataPoint> voltageHistory = [];
-
-          for (var entry in entries) {
-            var val = entry.value;
-            DateTime time = DateTime.fromMillisecondsSinceEpoch((val['timestamp'] as int) * 1000);
-            
-            tempHistory.add(ChartDataPoint(time, (val['temp'] ?? 0).toDouble()));
-            humidityHistory.add(ChartDataPoint(time, (val['hum'] ?? 0).toDouble()));
-            soilHistory.add(ChartDataPoint(time, (val['soil'] ?? 0).toDouble()));
-            luxHistory.add(ChartDataPoint(time, (val['lux'] ?? 0).toDouble()));
-            co2History.add(ChartDataPoint(time, (val['co2'] ?? 0).toDouble()));
-            voltageHistory.add(ChartDataPoint(time, (val['voltage'] ?? 0).toDouble()));
-          }
-
-          return ListView(
-            padding: const EdgeInsets.all(12),
-            children: [
-              _buildSfChart("İç Sıcaklık Değişimi (°C)", tempHistory, Colors.orange, "°C", 10, 45, true),
-              const SizedBox(height: 15),
-              _buildSfChart("İç Nem Değişimi (%)", humidityHistory, Colors.blue, "%", 0, 100, false),
-              const SizedBox(height: 15),
-              _buildSfChart("Toprak Nemi (%)", soilHistory, Colors.brown, "%", 0, 100, false),
-              const SizedBox(height: 15),
-              _buildSfChart("Işık Şiddeti (Lux)", luxHistory, Colors.amber, " Lx", 0, 1000, false),
-              const SizedBox(height: 15),
-              _buildSfChart("CO2 Konsantrasyonu (ppm)", co2History, Colors.blueGrey, " ppm", 300, 1200, false),
-              const SizedBox(height: 15),
-              _buildSfChart("Sistem Voltajı (V)", voltageHistory, Colors.green, "V", 10, 15, false),
-            ],
+            ),
           );
         },
       ),

@@ -39,7 +39,6 @@ dependencies:
   fl_chart: ^0.71.0
   syncfusion_flutter_charts: ^29.1.38
   google_generative_ai: ^0.4.7
-  flutter_dotenv: ^6.0.0
 
 dev_dependencies:
   flutter_test:
@@ -62,8 +61,6 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
-  assets:
-    - .env
 
   # To add assets to your application, add an assets section, like this:
   # assets:

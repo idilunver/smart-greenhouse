@@ -33,60 +33,116 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
     DatabaseReference controlRef = FirebaseDatabase.instance.ref("Greenhouse/Controls");
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAF8),
+      backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
-        title: const Text("🌿 Akıllı Sera Paneli", style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
+        title: const Text("🌿 Smart Greenhouse Controller", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        centerTitle: false,
         elevation: 0,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
+        actions: [
+          IconButton(onPressed: () {}, icon: const Icon(Icons.notifications_none_rounded)),
+          const SizedBox(width: 8),
+        ],
       ),
-      body: StreamBuilder(
-        stream: sensorsRef.onValue,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          Map data = snapshot.data!.snapshot.value as Map;
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          bool isWide = constraints.maxWidth > 900;
+          double contentWidth = isWide ? 1100 : constraints.maxWidth;
 
-          bool tempAlert = (double.tryParse(data['temp_inner']?.toString() ?? '0') ?? 0) > 32;
-          bool soilAlert = (double.tryParse(data['soil_moisture']?.toString() ?? '0') ?? 0) < 20;
-          bool humidityAlert = (double.tryParse(data['humidity_inner']?.toString() ?? '0') ?? 0) < 40;
+          return Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: contentWidth),
+              child: StreamBuilder(
+                stream: sensorsRef.onValue,
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  Map data = snapshot.data!.snapshot.value as Map;
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(flex: 3, child: _buildAISection(aiRef)),
-                    const SizedBox(width: 12),
-                    Expanded(flex: 2, child: _buildEventLog(controlRef)),
-                  ],
-                ),
-                const SizedBox(height: 25),
-                const Text("Kritik Göstergeler", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(child: _buildCriticalCard("İç Sıcaklık", "${data['temp_inner'] ?? '0'}", "°C", Icons.thermostat, Colors.orange, tempAlert)),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildCriticalCard("İç Nem", "${data['humidity_inner'] ?? '0'}", "%", Icons.water_drop, Colors.blue, humidityAlert)),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildCriticalCard("Toprak Nemi", "${data['soil_moisture'] ?? '0'}", "%", Icons.grass, Colors.brown, soilAlert)),
-                  ],
-                ),
-                const SizedBox(height: 25),
-                const Text("Tüm Sensör Verileri", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 12),
-                _buildSensorRow("Dış Sıcaklık", "${data['temp_outer'] ?? '0'} °C", Icons.wb_cloudy, Colors.blueGrey, "Referans"),
-                _buildSensorRow("Dış Nem", "${data['humidity_outer'] ?? '0'} %", Icons.air, Colors.cyan, "Normal"),
-                _buildSensorRow("Işık Gücü", "${data['light_lux'] ?? '0'} Lx", Icons.wb_sunny, Colors.amber, "Yeterli"),
-                _buildSensorRow("CO2 Seviyesi", "${data['CO2'] ?? '0'} ppm", Icons.cloud, Colors.blueGrey, "Güvenli"),
-                _buildSensorRow("Sistem Gücü", "12.4 V", Icons.bolt, Colors.green, "Aktif"),
-              ],
+                  bool tempAlert = (double.tryParse(data['temp_inner']?.toString() ?? '0') ?? 0) > 32;
+                  bool soilAlert = (double.tryParse(data['soil_moisture']?.toString() ?? '0') ?? 0) < 20;
+                  bool humidityAlert = (double.tryParse(data['humidity_inner']?.toString() ?? '0') ?? 0) < 40;
+
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Üst Panel: AI ve Loglar
+                        if (isWide)
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(flex: 2, child: _buildAISection(aiRef)),
+                              const SizedBox(width: 24),
+                              Expanded(flex: 1, child: _buildEventLog(controlRef)),
+                            ],
+                          )
+                        else
+                          Column(
+                            children: [
+                              _buildAISection(aiRef),
+                              const SizedBox(height: 16),
+                              _buildEventLog(controlRef),
+                            ],
+                          ),
+                        
+                        const SizedBox(height: 40),
+                        const Text("Kritik Sistem Parametreleri", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: -0.5)),
+                        const SizedBox(height: 16),
+                        
+                        // Kritik Kartlar: Mobilde Alt Alta/Kaydırılabilir, Web'de Yan Yana
+                        isWide 
+                          ? Row(
+                              children: [
+                                Expanded(child: _buildCriticalCard("Sıcaklık", "${data['temp_inner'] ?? '0'}", "°C", Icons.thermostat_rounded, Colors.orange, tempAlert)),
+                                const SizedBox(width: 16),
+                                Expanded(child: _buildCriticalCard("Hava Nemi", "${data['humidity_inner'] ?? '0'}", "%", Icons.water_drop_rounded, Colors.blue, humidityAlert)),
+                                const SizedBox(width: 16),
+                                Expanded(child: _buildCriticalCard("Toprak Nemi", "${data['soil_moisture'] ?? '0'}", "%", Icons.grass_rounded, Colors.brown, soilAlert)),
+                              ],
+                            )
+                          : GridView.count(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              crossAxisCount: constraints.maxWidth > 500 ? 3 : 2,
+                              mainAxisSpacing: 12,
+                              crossAxisSpacing: 12,
+                              childAspectRatio: 0.85,
+                              children: [
+                                _buildCriticalCard("Sıcaklık", "${data['temp_inner'] ?? '0'}", "°C", Icons.thermostat_rounded, Colors.orange, tempAlert),
+                                _buildCriticalCard("Hava Nemi", "${data['humidity_inner'] ?? '0'}", "%", Icons.water_drop_rounded, Colors.blue, humidityAlert),
+                                _buildCriticalCard("Toprak Nemi", "${data['soil_moisture'] ?? '0'}", "%", Icons.grass_rounded, Colors.brown, soilAlert),
+                              ],
+                            ),
+
+                        const SizedBox(height: 40),
+                        const Text("Yardımcı Sensörler", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: -0.5)),
+                        const SizedBox(height: 16),
+                        
+                        // Diğer Sensörler: Yan yana grid (Web'de daha fazla sütun)
+                        GridView.count(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisCount: isWide ? 3 : 1,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: isWide ? 3.5 : 4.5,
+                          children: [
+                            _buildSensorRow("Dış Sıcaklık", "${data['temp_outer'] ?? '0'} °C", Icons.wb_cloudy_rounded, Colors.blueGrey, "Atmosfer"),
+                            _buildSensorRow("Dış Nem", "${data['humidity_outer'] ?? '0'} %", Icons.air_rounded, Colors.cyan, "Normal"),
+                            _buildSensorRow("Işık Şiddeti", "${data['light_lux'] ?? '0'} Lx", Icons.wb_sunny_rounded, Colors.amber, "Güneş"),
+                            _buildSensorRow("CO2 Seviyesi", "${data['CO2'] ?? '0'} ppm", Icons.cloud_circle_rounded, Colors.blueGrey, "Besin"),
+                            _buildSensorRow("Voltaj", "12.4 V", Icons.bolt_rounded, Colors.green, "Stabil"),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
           );
         },

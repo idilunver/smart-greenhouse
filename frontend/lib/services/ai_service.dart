@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../config/env.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
 class AIService {
   static GenerativeModel? _model;
 
   static GenerativeModel _getOrCreateModel() {
-    final apiKey = (dotenv.env['GEMINI_API_KEY'] ?? "").trim();
+    final apiKey = Env.geminiApiKey;
     if (_model == null) {
       _model = GenerativeModel(
         model: 'gemini-3-flash-preview',
         apiKey: apiKey,
         systemInstruction: Content.system(
-          "Sen 'Smart Greenhouse' sisteminin beynisin. Bir ziraat mühendisi ve veri analisti gibi davran. "
-          "Sana JSON formatında sensör verileri gelecek. Veriler normalse 'Sistem stabil' de. "
-          "Eğer bir parametre bitki sağlığını tehdit ediyorsa (Örn: Nem %40'ın altındaysa) hemen teknik bir uyarı yap ve "
-          "aktüatör (fan, pompa vb.) önerisinde bulun. Kısa, net ve aksiyon odaklı ol."
+          "Sen bu akıllı seranın yaşayan zekası ve dijital koruyucusun. Bir ziraat uzmanının bilgisine "
+          "ve bir doğa dostunun sıcaklığına sahipsin. Görevin, karmaşık sensör verilerini anlamlandırıp "
+          "kullanıcıya rehberlik etmektir. Kişi isimleri kullanma. Samimi, bilge ve yardımcı bir üslup kullan. "
+          "Teknik verileri doğalca yedir ama çok uzun anlatma. Cevapların en fazla 2 cümle olsun. "
+          "Sorun varsa nazikçe çözüm öner, yoksa kısa bir onay ver."
         ),
       );
     }

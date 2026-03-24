@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'config/env.dart';
 
 import 'pages/dashboard_page.dart';
 import 'pages/ai_chat_page.dart';
@@ -11,20 +11,14 @@ import 'pages/login_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  try {
-    await dotenv.load(fileName: ".env");
-  } catch (e) {
-    debugPrint("DEBUG: .env yükleme hatası: $e");
-  }
 
   await Firebase.initializeApp(
     options: const FirebaseOptions(
-      apiKey: "AIzaSyB5VTUokAVSnmQUocsT1Ub7pOoxtCXKr4w",
-      appId: "1:588272095295:web:e73914e1640b98d6db688a",
-      messagingSenderId: "588272095295",
-      projectId: "smart-greenhouse-9fb8e",
-      databaseURL: "https://smart-greenhouse-9fb8e-default-rtdb.europe-west1.firebasedatabase.app",
+      apiKey: Env.firebaseApiKey,
+      appId: Env.firebaseAppId,
+      messagingSenderId: Env.firebaseMessagingSenderId,
+      projectId: Env.firebaseProjectId,
+      databaseURL: Env.firebaseDatabaseUrl,
     ),
   );
   runApp(const MyApp());
