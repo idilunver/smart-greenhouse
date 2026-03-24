@@ -140,7 +140,7 @@ class ChartsPage extends StatelessWidget {
                     color: color.withOpacity(0.3),
                     borderColor: color,
                     borderWidth: 3,
-                    markerSettings: const MarkerSettings(isVisible: true, size: 4),
+                    markerSettings: const MarkerSettings(isVisible: true, width: 4, height: 4),
                     enableTooltip: true,
                     animationDuration: 1500,
                   )

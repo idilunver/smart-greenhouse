@@ -38,15 +38,15 @@ def update_physics():
     
     # Sıcaklık Fiziği
     if state["fan_on"] == True:
-        state["temp_inner"] -= 0.3 # Fan soğutur
+        state["temp_inner"] -= 0.15 # Fan soğutur (Daha dengeli)
     else:
-        state["temp_inner"] += random.uniform(0.05, 0.15) # Güneş ısıtır
+        state["temp_inner"] += random.uniform(0.01, 0.05) # Güneş ısıtır (Daha yavaş)
     
     # Toprak Nemi Fiziği
     if state["pump_on"] == True:
-        state["soil_moisture"] += 1.5 # Pompa sular
+        state["soil_moisture"] += 0.8 # Pompa sular (Taşmayı önler)
     else:
-        state["soil_moisture"] -= 0.2 # Buharlaşma
+        state["soil_moisture"] -= 0.05 # Buharlaşma (Daha stabil)
         
     # Nem Fiziği (Işık/Sisleme simülasyonu)
     if state["light_on"] == True:

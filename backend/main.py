@@ -8,7 +8,8 @@ import google.generativeai as genai
 # --- Yapılandırma ---
 CERT_PATH = "serviceAccountKey.json"
 GEMINI_API_KEY = "AIzaSyBXhB8n33_guRAFCy3JBwsyP0_VRePPzHI" 
-AI_COOLDOWN = 300  # 5 dakika (Saniye cinsinden)
+AI_COOLDOWN = 300  # 5 dakika (Normal mod)
+CRITICAL_AI_COOLDOWN = 60 # 1 dakika (Kritik mod)
 HISTORY_INTERVAL = 600 # 10 dakika (Geçmiş veri kaydı için)
 last_ai_time = 0
 last_history_time = 0
@@ -165,12 +166,25 @@ def handle_sensor_change(event):
                 except: pass
 
     # 6. AI Tavsiyesi Gerekiyor mu?
-    is_critical = temp > 32 or soil < 20 or hum < 40
-    should_call_ai = (current_time - last_ai_time > AI_COOLDOWN) or is_critical
+    is_critical = (temp > 32 or soil < 20 or hum < 40)
+    
+    # KOTA KORUMASI: Kritik durumda bile en az 1 dakika geçmeli
+    time_since_last_ai = current_time - last_ai_time
+    
+    should_call_ai = False
+    if is_critical:
+        # Kritik durumda 1 dakika (60 sn) bekliyoruz
+        if time_since_last_ai > CRITICAL_AI_COOLDOWN:
+            should_call_ai = True
+            print("[!] KRITIK DURUM: Acil AI tavsiyesi alınıyor...")
+    else:
+        # Normal durumda 5 dakika (300 sn) bekliyoruz
+        if time_since_last_ai > AI_COOLDOWN:
+            should_call_ai = True
+            print("[*] Periyodik AI tavsiyesi alınıyor...")
 
     ai_advice = None
     if should_call_ai:
-        print(f"[*] Gemini'den {selected_plants} için tavsiye alınıyor...")
         ai_advice = get_gemini_advice(temp, hum, soil, vpd, et_rate, selected_plants)
         last_ai_time = current_time
     
