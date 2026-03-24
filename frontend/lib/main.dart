@@ -7,6 +7,8 @@ import 'pages/ai_chat_page.dart';
 import 'pages/charts_page.dart';
 import 'pages/control_page.dart';
 
+import 'pages/login_page.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
@@ -40,7 +42,7 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFFF1F5F9),
         cardTheme: CardTheme(elevation: 2, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
       ),
-      home: const MainNavigation(),
+      home: const LoginPage(),
     );
   }
 }

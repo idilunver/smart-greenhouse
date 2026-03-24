@@ -1,8 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
+
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> with TickerProviderStateMixin {
+  late AnimationController _fanController;
+  late AnimationController _pumpController;
+
+  @override
+  void initState() {
+    super.initState();
+    _fanController = AnimationController(vsync: this, duration: const Duration(seconds: 2));
+    _pumpController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500));
+  }
+
+  @override
+  void dispose() {
+    _fanController.dispose();
+    _pumpController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,22 +58,17 @@ class DashboardPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── ÜST BÖLÜM: AI Tavsiyesi + Son Olaylar yan yana ──
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ARTIK BURASI CANLI DİNLENİYOR
                     Expanded(flex: 3, child: _buildAISection(aiRef)),
                     const SizedBox(width: 12),
                     Expanded(flex: 2, child: _buildEventLog(controlRef)),
                   ],
                 ),
-
                 const SizedBox(height: 25),
                 const Text("Kritik Göstergeler", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
-
-                // ── ORTA BÖLÜM: Kritik Göstergeler (büyük kartlar) ──
                 Row(
                   children: [
                     Expanded(child: _buildCriticalCard("İç Sıcaklık", "${data['temp_inner'] ?? '0'}", "°C", Icons.thermostat, Colors.orange, tempAlert)),
@@ -61,12 +78,9 @@ class DashboardPage extends StatelessWidget {
                     Expanded(child: _buildCriticalCard("Toprak Nemi", "${data['soil_moisture'] ?? '0'}", "%", Icons.grass, Colors.brown, soilAlert)),
                   ],
                 ),
-
                 const SizedBox(height: 25),
                 const Text("Tüm Sensör Verileri", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
-
-                // ── ALT BÖLÜM: Tüm sensörler liste halinde ──
                 _buildSensorRow("Dış Sıcaklık", "${data['temp_outer'] ?? '0'} °C", Icons.wb_cloudy, Colors.blueGrey, "Referans"),
                 _buildSensorRow("Dış Nem", "${data['humidity_outer'] ?? '0'} %", Icons.air, Colors.cyan, "Normal"),
                 _buildSensorRow("Işık Gücü", "${data['light_lux'] ?? '0'} Lx", Icons.wb_sunny, Colors.amber, "Yeterli"),
@@ -132,77 +146,103 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  // ── SON OLAYLAR KARTI (SABİT KALDI) ──
+  // ── SON OLAYLAR KARTI (CANLI LOG VERSİYONU) ──
   Widget _buildEventLog(DatabaseReference controlRef) {
-    return StreamBuilder(
-      stream: controlRef.onValue,
-      builder: (context, snapshot) {
-        Map controls = (snapshot.data?.snapshot.value as Map?) ?? {};
-        bool pumpOn = controls['pump']?.toString() == "1";
-        bool fanOn = controls['fan']?.toString() == "1";
-        bool lightOn = controls['light']?.toString() == "1";
-        bool autoMode = controls['auto_mode']?.toString() == "1";
+    DatabaseReference logsRef = FirebaseDatabase.instance.ref("Greenhouse/Logs");
 
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10)],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.notifications_active, color: Colors.orange[700], size: 20),
-                  const SizedBox(width: 8),
-                  const Text("Son Olaylar", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                ],
-              ),
-              const SizedBox(height: 12),
-              _buildEventItem(
-                pumpOn ? "Pompa Çalışıyor" : "Pompa Kapalı",
-                pumpOn ? "Aktif sulama" : "Beklemede",
-                Icons.water_drop,
-                pumpOn ? Colors.blue : Colors.grey,
-              ),
-              _buildEventItem(
-                fanOn ? "Fan Çalışıyor" : "Fan Kapalı",
-                fanOn ? "Havalandırma aktif" : "Beklemede",
-                Icons.air,
-                fanOn ? Colors.cyan : Colors.grey,
-              ),
-              _buildEventItem(
-                lightOn ? "Işık Açık" : "Işık Kapalı",
-                lightOn ? "Işık aktif" : "Beklemede",
-                Icons.lightbulb,
-                lightOn ? Colors.amber : Colors.grey,
-              ),
-              const Divider(height: 16),
-              Row(
-                children: [
-                  Icon(autoMode ? Icons.smart_toy : Icons.pan_tool, size: 14, color: autoMode ? Colors.green : Colors.grey),
-                  const SizedBox(width: 6),
-                  Text(
-                    autoMode ? "Otonom" : "Manuel",
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: autoMode ? Colors.green[700] : Colors.grey[600]),
-                  ),
-                ],
-              ),
-            ],
-          ),
+    return StreamBuilder(
+      stream: logsRef.limitToLast(5).onValue,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.snapshot.value == null) {
+          return _buildStaticEventContainer(const [
+            Text("Henüz olay gerçekleşmedi.", style: TextStyle(fontSize: 10, color: Colors.grey)),
+          ]);
+        }
+
+        Map dataMap = snapshot.data!.snapshot.value as Map;
+        List<MapEntry> entries = dataMap.entries.toList();
+        entries.sort((a, b) => (b.value['timestamp'] as int).compareTo(a.value['timestamp'] as int));
+
+        // Animasyon durumlarını kontrol et
+        bool isPumpRunning = entries.any((e) => e.value['type'] == 'pump' && e.value['msg'].contains('AÇILDI'));
+        bool isFanRunning = entries.any((e) => e.value['type'] == 'fan' && e.value['msg'].contains('AÇILDI'));
+        
+        if (isFanRunning) { _fanController.repeat(); } else { _fanController.stop(); }
+        if (isPumpRunning) { _pumpController.repeat(reverse: true); } else { _pumpController.stop(); }
+
+        return _buildStaticEventContainer(
+          entries.map((e) {
+            var val = e.value;
+            String type = val['type']?.toString() ?? 'info';
+            IconData icon = Icons.info_outline;
+            Color color = Colors.blue;
+            Widget? animatedIcon;
+
+            if (type == 'pump') { 
+              icon = Icons.water_drop; 
+              color = Colors.blue;
+              animatedIcon = ScaleTransition(scale: Tween(begin: 0.8, end: 1.2).animate(_pumpController), child: Icon(icon, size: 14, color: color));
+            }
+            if (type == 'fan') { 
+              icon = Icons.air; 
+              color = Colors.cyan;
+              animatedIcon = RotationTransition(turns: _fanController, child: Icon(icon, size: 14, color: color));
+            }
+            if (type == 'light') { icon = Icons.lightbulb; color = Colors.amber; }
+
+            return _buildEventItem(
+              val['msg']?.toString() ?? "Olay",
+              _formatTimestamp(val['timestamp'] as int),
+              icon,
+              color,
+              customIcon: animatedIcon,
+            );
+          }).toList(),
         );
       },
     );
   }
 
-  Widget _buildEventItem(String title, String subtitle, IconData icon, Color color) {
+  String _formatTimestamp(int timestamp) {
+    DateTime dt = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
+    return "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
+  }
+
+  Widget _buildStaticEventContainer(List<Widget> children) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.notifications_active, color: Colors.orange[700], size: 20),
+              const SizedBox(width: 8),
+              const Text("Son Olaylar", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEventItem(String title, String subtitle, IconData icon, Color color, {Widget? customIcon}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         children: [
-          CircleAvatar(radius: 14, backgroundColor: color.withOpacity(0.1), child: Icon(icon, size: 14, color: color)),
+          CircleAvatar(
+            radius: 14, 
+            backgroundColor: color.withOpacity(0.1), 
+            child: customIcon ?? Icon(icon, size: 14, color: color)
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
