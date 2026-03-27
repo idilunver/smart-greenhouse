@@ -46,23 +46,47 @@ def update_physics():
     """Gerçek dünya fiziğini simüle eder."""
     global state
     
-    # Sıcaklık Fiziği
-    if state["fan_on"] == True:
-        state["temp_inner"] -= 0.15 # Fan soğutur (Daha dengeli)
-    else:
-        state["temp_inner"] += random.uniform(0.01, 0.05) # Güneş ısıtır (Daha yavaş)
+    ambient_temp = 18.2 # Dış ortam sıcaklığı
+    ambient_hum = 45.0  # Dış ortam nemi
     
-    # Toprak Nemi Fiziği
-    if state["pump_on"] == True:
-        state["soil_moisture"] += 0.8 # Pompa sular (Taşmayı önler)
+    # ---------------------------------------------------------
+    # NOT: ARKADAŞIN SUNUCUYU AÇIP DATALARI GÖNDERMEYE BAŞLADIĞINDA,
+    # BU DOSYAYI ÇALIŞTIRMAYI DURDUR! Aksi halde çakışma olur.
+    # ---------------------------------------------------------
+
+    # 1. Sıcaklık Fiziği 
+    if state["fan_on"]:
+        # Fan açılınca sıcaklık daha hızlı düşer
+        state["temp_inner"] -= random.uniform(0.1, 0.2) 
     else:
-        state["soil_moisture"] -= 0.05 # Buharlaşma (Daha stabil)
+        # Fan kapalıyken, sıcaklık dış ortam sıcaklığına yavaşça uyum sağlar
+        # veya gündüzse/güneşliyse artar (biz hafif artış simüle edelim)
+        if state["temp_inner"] > ambient_temp:
+            state["temp_inner"] -= random.uniform(0.01, 0.03) # Yavaşça soğur
+        else:
+            state["temp_inner"] += random.uniform(0.01, 0.05) # Veya sabit kalmaya çalışır
+    
+    # İçeride kendi ısınma faktörü (cihazlar, güneş) sebebiyle ufak eklemeler
+    state["temp_inner"] += random.uniform(0.00, 0.02)
+    
+    # 2. Toprak Nemi Fiziği
+    if state["pump_on"]:
+        state["soil_moisture"] += random.uniform(0.5, 1.2) # Pompa çalışınca su artar
+    else:
+        state["soil_moisture"] -= random.uniform(0.02, 0.08) # Doğal buharlaşma
         
-    # Nem Fiziği (Işık/Sisleme simülasyonu)
-    if state["light_on"] == True:
-        state["humidity_inner"] += 0.8
+    # 3. Nem Fiziği (Işık/Sisleme simülasyonu ve Dış ortama uyum)
+    if state["light_on"]:
+        state["humidity_inner"] += random.uniform(0.5, 1.0) # Nem cihazı / sisleme çalışıyor
+    elif state["fan_on"]:
+        # Fan çalışınca nem kurur ve dış ortama yaklaşır
+        state["humidity_inner"] -= random.uniform(0.2, 0.5)
     else:
-        state["humidity_inner"] += random.uniform(-0.5, 0.5)
+        # Doğal dalgalanma
+        if state["humidity_inner"] > ambient_hum:
+            state["humidity_inner"] -= random.uniform(0.02, 0.05)
+        else:
+            state["humidity_inner"] += random.uniform(0.02, 0.05)
 
     # Sınırları Koru
     state["temp_inner"] = max(15.0, min(40.0, state["temp_inner"]))

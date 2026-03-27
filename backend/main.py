@@ -71,12 +71,12 @@ def get_gemini_advice(temp, hum, soil, vpd, et_rate, plants):
     Şu an yetiştirilen bitkiler: {plants_text}
     Veriler: Sıcaklık {temp}°C (Trend: {trend_text}), Nem %{hum}, Toprak Nemi %{soil}, VPD: {vpd} kPa.
 
-    Talimatlar:
-    1. Kişi isimleri kullanma. Samimi ("Selam", "Merhaba" vb.) bir giriş yap.
-    2. Teknik verileri doğalca yedir ama sadece en kritik olanı seç, hepsini sayma.
-    3. Her şey yolundaysa ferahlatıcı bir onay ver.
-    4. Sorun varsa çözümünü nazikçe belirt.
-    5. Cevabı en fazla 2 kısa cümle ile sınırla.
+    Kritik Kurallar ve Talimatlar:
+    1. Sensör Hatası Sensörü: Eğer herhangi bir sensör verisi 0, çok düşük veya mantıksız derecede yüksekse (örn: Sıcaklık 0 veya 99, Nem 0), doğrudan şu uyarıyı yap: "Sensör bağlantılarında bir hata algıladım, lütfen kabloları kontrol et."
+    2. Bitkiye Özel Yaklaşım: '{plants_text}' bitkisinin genel karakteristiklerini düşün (örn. marul serinliği sever, domates ışığı ve sıcağı). Yorumunu o bitkiye tam uyacak şekilde yap.
+    3. Kişi isimleri kullanma. Samimi ("Selam", "Merhaba" vb.) bir giriş yap.
+    4. Teknik verileri doğalca yedir ama sadece durum için en kritik olan 1 veya 2 veriyi seç, hepsini sayma.
+    5. UI Tasarım Kuralı: Cevabı KESİNLİKLE EN FAZLA 2 KISA CÜMLE ile sınırla. Kesinlikle fazla uzatma.
     """
     try:
         response = model.generate_content(prompt)
