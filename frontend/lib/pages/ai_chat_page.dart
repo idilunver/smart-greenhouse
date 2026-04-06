@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../services/ai_service.dart';
@@ -26,11 +27,28 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
   // Şu an aktif olan sohbetin index'i
   int _activeConversationIndex = 0;
 
+  // Sensör datasını arka planda sürekli güncel tut (stream — get() yerine)
+  StreamSubscription? _sensorSubscription;
+  Map _latestSensorData = {};
+
   @override
   void initState() {
     super.initState();
     // Uygulama açılınca bir adet varsayılan sohbet oluştur
     _createNewConversation();
+
+    // Sensör datasını stream ile sürekli arka planda tut
+    // Böylece kullanıcı mesaj gönderdiğinde her seferinde db.get() yapmak gerekmez
+    _sensorSubscription = FirebaseDatabase.instance
+        .ref('Greenhouse/Sensors')
+        .onValue
+        .listen((event) {
+      if (event.snapshot.value != null && mounted) {
+        setState(() {
+          _latestSensorData = event.snapshot.value as Map;
+        });
+      }
+    });
   }
 
   void _createNewConversation() {
@@ -91,10 +109,8 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
     });
 
     try {
-      final snapshot = await FirebaseDatabase.instance.ref("Greenhouse/Sensors").get();
-      Map sensorData = (snapshot.value as Map?) ?? {};
-
-      String aiResponse = await AIService.getChatResponse(userMsg, sensorData);
+      // Anlık db.get() yerine arka planda sürekli güncellenen _latestSensorData kullanılır
+      String aiResponse = await AIService.getChatResponse(userMsg, _latestSensorData);
 
       setState(() {
         activeConv.messages.add({'role': 'ai', 'text': aiResponse});

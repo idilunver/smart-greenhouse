@@ -9,26 +9,29 @@ from dotenv import load_dotenv
 # --- Çevresel Değişkenleri Yükle ---
 load_dotenv()
 
-# --- Yapılandırma ---
-CERT_PATH = "serviceAccountKey.json"
 # --- Yapılandırma (Çevresel Değişkenlerden) ---
 CERT_PATH = os.getenv("SERVICE_ACCOUNT_KEY_PATH", "serviceAccountKey.json")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 FIREBASE_DB_URL = os.getenv("FIREBASE_DATABASE_URL")
 
-AI_COOLDOWN = 300  # 5 dakika (Normal mod)
-CRITICAL_AI_COOLDOWN = 60 # 1 dakika (Kritik mod)
-HISTORY_INTERVAL = 600 # 10 dakika (Geçmiş veri kaydı için)
+# --- KOTA YÖNETİMİ: Zaman Eşikleri ---
+AI_COOLDOWN = 300           # Normal: en fazla saatte ~12 Gemini isteği
+CRITICAL_AI_COOLDOWN = 60   # Kritik: en fazla saatte ~60 Gemini isteği
+HISTORY_INTERVAL = 600      # 10 dakikada bir geçmiş kayıt
+PROCESSING_INTERVAL = 30    # En az 30 saniyede bir backend işlemesi
+
 last_ai_time = 0
 last_history_time = 0
+last_processing_time = 0
+last_known_temp = None       # Delta tabanlı tetikleme için
+cached_settings = {}         # Settings verisini önbellekte tutmak için
 
-# Gemini Kurulumu - Kota dostu LITE model
+# Gemini Kurulumu - Kota dostu model
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-flash-lite-latest')
 
 def initialize_firebase():
     if not firebase_admin._apps:
-        # Absürt yol hatalarını önlemek için absolute path kullanalım
         abs_cert_path = os.path.abspath(CERT_PATH)
         if not os.path.exists(abs_cert_path):
             print(f"HATA: {abs_cert_path} bulunamadı! Lütfen Service Account JSON dosyasını kontrol edin.")
@@ -97,40 +100,49 @@ PLANT_RULES = {
 }
 
 def handle_sensor_change(event):
-    global last_ai_time, last_history_time
-    data = event.data
-    if data is None or not isinstance(data, dict): return
-        
-    print(f"\n--- Veri Geldi ({time.strftime('%H:%M:%S')}) ---")
-    
-    # 1. Verileri Hazırla
-    temp = float(data.get('temp_inner', 25))
-    hum = float(data.get('humidity_inner', 50))
-    soil = float(data.get('soil_moisture', 40))
-    
-    # 2. Güncel Ayarları Çek (Bitkiler + Auto Mode)
-    try:
-        settings = db.reference('Greenhouse/Settings').get() or {}
-        selected_plants = settings.get('plants', [])
-        auto_mode = settings.get('auto_mode', False)
-    except:
-        selected_plants, auto_mode = [], False
-    
-    # 3. Matematiksel Hesaplamalar
+    global last_ai_time, last_history_time, last_processing_time, last_known_temp
+
+    if event.data is None or not isinstance(event.data, dict):
+        return
+
+    # Verileri Hızlıca Oku (Kritik kontrol için)
+    temp = float(event.data.get('temp_inner', 25))
+    hum = float(event.data.get('humidity_inner', 50))
+    soil = float(event.data.get('soil_moisture', 40))
+
+    # ─────────────────────────────────────────────────────
+    # KOTA YÖNETİMİ - KATMAN 2: İşleme Throttle
+    # Kritik durum her zaman işlenir. Normal durumda 30sn bekleriz.
+    # ─────────────────────────────────────────────────────
+    is_critical = (temp > 32 or soil < 20 or hum < 40)
+    current_time = time.time()
+
+    if not is_critical and (current_time - last_processing_time < PROCESSING_INTERVAL):
+        # Kritik değil ve 30 saniye dolmadı — bu tetiklenmeyi atla
+        return
+
+    last_processing_time = current_time
+    print(f"\n--- Veri İşleniyor ({time.strftime('%H:%M:%S')}) ---")
+
+    # Güncel Ayarları Çek (Önbellekten)
+    global cached_settings
+    selected_plants = cached_settings.get('plants', [])
+    auto_mode = cached_settings.get('auto_mode', False)
+
+    # Matematiksel Hesaplamalar
     vpd = calculate_vpd(temp, hum)
     et_rate = round(vpd * 0.4, 2)
-    
-    # 4. Geçmiş Veri Kaydı (Her 10 dakikada bir)
-    current_time = time.time()
+
+    # Geçmiş Veri Kaydı (Her 10 dakikada bir)
     if current_time - last_history_time > HISTORY_INTERVAL:
         try:
             db.reference('Greenhouse/History').push({
                 'temp': temp,
                 'hum': hum,
                 'soil': soil,
-                'lux': float(data.get('light_lux', 0)),
-                'co2': float(data.get('CO2', 0)),
-                'voltage': 12.4, # Simüle voltaj
+                'lux': float(event.data.get('light_lux', 0)),
+                'co2': float(event.data.get('CO2', 0)),
+                'voltage': 12.4,
                 'timestamp': int(current_time)
             })
             last_history_time = current_time
@@ -138,33 +150,30 @@ def handle_sensor_change(event):
         except Exception as e:
             print(f"History Hatası: {e}")
 
-    # 5. Akıllı Otomasyon (The Brain)
+    # Akıllı Otomasyon (The Brain)
     if auto_mode:
-        # En kısıtlı bitkiye göre (veya ilkine göre) kural belirle
         plant_name = "genel bitkiler"
         if selected_plants and isinstance(selected_plants, list) and len(selected_plants) > 0:
             first_plant = str(selected_plants[0])
             plant_name = first_plant.split(" ")[0]
-            
+
         target_rule = PLANT_RULES.get(plant_name, PLANT_RULES["genel bitkiler"])
-        
         controls_ref = db.reference('Greenhouse/Controls')
         actions = {}
-        
+
         # Sıcaklık Kontrolü (Fan)
         if temp > target_rule["temp"][1]: actions['fan'] = True
         elif temp < target_rule["temp"][0] + 2: actions['fan'] = False
-        
+
         # Toprak Nemi (Pompa)
         if soil < target_rule["soil"][0]: actions['pump'] = True
         elif soil > target_rule["soil"][1]: actions['pump'] = False
-        
-        # Nem Kontrolü (Opsiyonel Işık/Sisleme simülasyonu)
-        if hum < target_rule["hum"][0]: actions['light'] = True # Işığı sisleme gibi simüle edelim
-        
+
+        # Nem Kontrolü (Işık/Sisleme)
+        if hum < target_rule["hum"][0]: actions['light'] = True
+
         if actions:
             controls_ref.update(actions)
-            # Olay Günlüğü Logla
             for act, val in actions.items():
                 log_msg = f"{selected_plants[0] if selected_plants else 'Sistem'} için {act} {'AÇILDI' if val else 'KAPATILDI'}"
                 print(f"[OTOMASYON] {log_msg}")
@@ -176,21 +185,25 @@ def handle_sensor_change(event):
                     })
                 except: pass
 
-    # 6. AI Tavsiyesi Gerekiyor mu?
-    is_critical = (temp > 32 or soil < 20 or hum < 40)
-    
-    # KOTA KORUMASI: Kritik durumda bile en az 1 dakika geçmeli
+    # ─────────────────────────────────────────────────────
+    # KOTA YÖNETİMİ - KATMAN 3: Delta + Cooldown ile AI Çağrı Kontrolü
+    # ─────────────────────────────────────────────────────
+    MIN_TEMP_DELTA = 1.5  # Bu kadardan az değişimde AI çağırma
+    temp_changed_enough = (
+        last_known_temp is None or
+        abs(temp - last_known_temp) >= MIN_TEMP_DELTA
+    )
+    last_known_temp = temp
+
     time_since_last_ai = current_time - last_ai_time
-    
     should_call_ai = False
+
     if is_critical:
-        # Kritik durumda 1 dakika (60 sn) bekliyoruz
         if time_since_last_ai > CRITICAL_AI_COOLDOWN:
             should_call_ai = True
-            print("[!] KRITIK DURUM: Acil AI tavsiyesi alınıyor...")
+            print("[!] KRİTİK DURUM: Acil AI tavsiyesi alınıyor...")
     else:
-        # Normal durumda 5 dakika (300 sn) bekliyoruz
-        if time_since_last_ai > AI_COOLDOWN:
+        if time_since_last_ai > AI_COOLDOWN and temp_changed_enough:
             should_call_ai = True
             print("[*] Periyodik AI tavsiyesi alınıyor...")
 
@@ -198,8 +211,8 @@ def handle_sensor_change(event):
     if should_call_ai:
         ai_advice = get_gemini_advice(temp, hum, soil, vpd, et_rate, selected_plants)
         last_ai_time = current_time
-    
-    # 7. Firebase'e Yaz (Analiz)
+
+    # Firebase'e Yaz (Analiz)
     try:
         analysis_ref = db.reference('Greenhouse/AI_Analysis')
         update_data = {
@@ -209,18 +222,60 @@ def handle_sensor_change(event):
         }
         if ai_advice:
             update_data['advice'] = ai_advice
-            
+
         analysis_ref.update(update_data)
         if ai_advice:
             print(f"[*] AI Tavsiyesi: {ai_advice}")
-        print(f"[*] Sistem Verileri: VPD={vpd}, ET={et_rate}")
+        print(f"[*] VPD={vpd} kPa, ET={et_rate} mm/h | Sıcaklık={temp}°C, Nem={hum}%, Toprak={soil}%")
     except Exception as e:
         print(f"Hata: {e}")
 
+
+def on_settings_change(event):
+    """Ayarlar güncellendiğinde önbelleği günceller."""
+    global cached_settings
+    if event.data is not None and isinstance(event.data, dict):
+        cached_settings = event.data
+    elif event.data is not None and isinstance(event.data, bool) or isinstance(event.data, str):
+         # Spesifik bir değer güncellendiğinde
+         path = event.path.strip("/")
+         if path:
+             cached_settings[path] = event.data
+             
+def start_with_reconnect():
+    """
+    Stream bağlantısını kurar. Kopunca otomatik yeniden bağlanır.
+    Bu fonksiyon sayesinde backend sonsuza kadar ayakta kalır.
+    """
+    sensors_ref = db.reference('Greenhouse/Sensors')
+    settings_ref = db.reference('Greenhouse/Settings')
+    retry_delay = 5  # İlk bekleme süresi
+
+    while True:
+        try:
+            print(f">>> Stream bağlantısı kuruluyor... (Greenhouse/Sensors & Settings)")
+            sensor_listener = sensors_ref.listen(handle_sensor_change)
+            settings_listener = settings_ref.listen(on_settings_change)
+            print(">>> Stream aktif. Veri bekleniyor...")
+
+            # Stream çalıştığı sürece burada bekle
+            while True:
+                time.sleep(1)
+
+        except KeyboardInterrupt:
+            print("\n>>> Durduruldu.")
+            if 'sensor_listener' in locals():
+                sensor_listener.close()
+            if 'settings_listener' in locals():
+                settings_listener.close()
+            break
+        except Exception as e:
+            print(f"[!] Stream hatası: {e}")
+            print(f"[!] {retry_delay} saniye sonra yeniden bağlanılıyor...")
+            time.sleep(retry_delay)
+            retry_delay = min(retry_delay * 2, 60)  # Exponential backoff, max 60sn
+
+
 if __name__ == "__main__":
     if initialize_firebase():
-        sensors_ref = db.reference('Greenhouse/Sensors')
-        sensors_ref.listen(handle_sensor_change)
-        try:
-            while True: time.sleep(1)
-        except KeyboardInterrupt: print("\n>>> Durduruldu.")
+        start_with_reconnect()

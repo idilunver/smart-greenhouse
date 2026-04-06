@@ -98,17 +98,21 @@ void setup() {
 }
 
 void loop() {
-  // Her 5 saniyede bir veri gönder
-  if (Firebase.ready() && (millis() - dataMillis > 5000 || dataMillis == 0)) {
+  // KOTA YÖNETİMİ: Her 15 saniyede bir veri gönder (Önceki: 5sn)
+  if (Firebase.ready() && (millis() - dataMillis > 15000 || dataMillis == 0)) {
     dataMillis = millis();
 
     // 1. Sensörleri Oku (SİMÜLE EDİLMİŞ VERİ)
-    // Donanım bağlandığında buralara gerçek analogRead() ve kütüphane okumaları gelecek.
+    // ----------------------------------------------------
+    // TODO(Donanım): Gerçek sensörler için buraları doldur.
+    // Örnek: float temp = bme.readTemperature();
+    // ----------------------------------------------------
     float temp = 24.5; 
     float hum = 55.2;
-    float soil = map(analogRead(SOIL_PIN), 0, 4095, 0, 100); // Örnek analog okuma
+    // float soil = map(analogRead(SOIL_PIN), 4095, 0, 0, 100); // Islak/Kuru değerine göre kalibre et
+    float soil = 45.0; // Şimdilik sabit, donanım takılınca üstteki satırı açın.
 
-    // 2. JSON Formatında Paketle
+    // 2. JSON Formatında Paketle (Data Dictionary ile uyumlu)
     FirebaseJson json;
     json.set("temp_inner", temp);
     json.set("humidity_inner", hum);
@@ -121,7 +125,7 @@ void loop() {
     json.set("humidity_outer", 45.0);
 
     // 3. Firebase'e Toplu Gönder
-    Serial.printf("Sensor verileri gonderiliyor... ");
+    Serial.printf("[%lu] Sensor verileri gonderiliyor... ", millis());
     if (Firebase.RTDB.updateNode(&fbdo, "/Greenhouse/Sensors", &json)) {
       Serial.println("BASARILI!");
     } else {
