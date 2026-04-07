@@ -99,16 +99,60 @@ PLANT_RULES = {
     "genel bitkiler": {"temp": (20, 30), "hum": (50, 80), "soil": (30, 60)}
 }
 
-def handle_sensor_change(event):
-    global last_ai_time, last_history_time, last_processing_time, last_known_temp
+sensor_state = {
+    'temp_inner': 25.0,
+    'humidity_inner': 50.0,
+    'soil_moisture': 40.0,
+    'light_lux': 0.0,
+    'CO2': 0.0
+}
 
-    if event.data is None or not isinstance(event.data, dict):
+def handle_sensor_change(event):
+    global last_ai_time, last_history_time, last_processing_time, last_known_temp, sensor_state
+    
+    print(f"[*] Firebase'den tetik geldi! Path: {event.path}, Data: {event.data}", flush=True)
+
+    if event.data is None:
         return
 
-    # Verileri Hızlıca Oku (Kritik kontrol için)
-    temp = float(event.data.get('temp_inner', 25))
-    hum = float(event.data.get('humidity_inner', 50))
-    soil = float(event.data.get('soil_moisture', 40))
+    # Eğer Data dict ise, tüm değerler gelmiş / güncellenmiş demektir
+    if isinstance(event.data, dict):
+        for key, value in event.data.items():
+            if key in sensor_state:
+                sensor_state[key] = float(value)
+    # Eğer Data dict değilse, spesifik bir yol (path) gelmiş demektir (ör: /temp_inner)
+    else:
+        path_key = event.path.strip("/")
+        if path_key in sensor_state:
+            sensor_state[path_key] = float(event.data)
+
+    # Güncel değerleri kullan
+    temp = sensor_state['temp_inner']
+    hum = sensor_state['humidity_inner']
+    soil = sensor_state['soil_moisture']
+
+    # --- VERİ DOĞRULAMA & GÜVENLİ MOD (FAIL-SAFE) ---
+    if temp < 0 or temp > 60 or hum < 0 or hum > 100 or soil < 0 or soil > 100:
+        print(f"[!!!] KRİTİK HATA: Anormal veri tespit edildi (Temp: {temp}, Hum: {hum}, Soil: {soil}). Güvenli moda geçiliyor...")
+        try:
+            db.reference('Greenhouse/System_Status').update({'error_log': 'SENSOR_ERROR'})
+            # Fan, pompa ve ışığı acil kapat (0 veya False yollanabilir)
+            db.reference('Greenhouse/Controls').update({'fan': 0, 'pump': 0, 'light': 0})
+        except Exception as e:
+            pass
+        return  # Hatalı veri ile işlem yapmamak için fonksiyonu sonlandır
+    else:
+        # Sensör okumaları normale döndüğünde hata bayrağını temizle
+        try:
+            db.reference('Greenhouse/System_Status').update({
+                'error_log': 'No errors',
+                'is_online': True,
+                'last_ping': time.strftime('%d-%m-%Y %H:%M')
+            })
+        except:
+            pass
+
+
 
     # ─────────────────────────────────────────────────────
     # KOTA YÖNETİMİ - KATMAN 2: İşleme Throttle

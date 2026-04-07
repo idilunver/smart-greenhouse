@@ -31,6 +31,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
     DatabaseReference sensorsRef = FirebaseDatabase.instance.ref("Greenhouse/Sensors");
     DatabaseReference aiRef = FirebaseDatabase.instance.ref("Greenhouse/AI_Analysis");
     DatabaseReference controlRef = FirebaseDatabase.instance.ref("Greenhouse/Controls");
+    DatabaseReference statusRef = FirebaseDatabase.instance.ref("Greenhouse/System_Status");
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
@@ -70,6 +71,8 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        _buildErrorBanner(statusRef),
+                        
                         // Üst Panel: AI ve Loglar
                         if (isWide)
                           Row(
@@ -379,6 +382,54 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
           ),
         ],
       ),
+    );
+  }
+
+  // ── HATA (FAIL-SAFE) UYARI KARTI ──
+  Widget _buildErrorBanner(DatabaseReference statusRef) {
+    return StreamBuilder(
+      stream: statusRef.onValue,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data?.snapshot.value == null) return const SizedBox.shrink();
+
+        Map statusData = snapshot.data!.snapshot.value as Map;
+        String errorLog = statusData['error_log']?.toString() ?? 'No errors';
+
+        if (errorLog == 'No errors') return const SizedBox.shrink(); // Hata yoksa yer kaplama
+
+        return Container(
+          width: double.infinity,
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.red[50],
+            border: Border.all(color: Colors.red[300]!, width: 2),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 32),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Sistem Güvenli Modda (Fail-Safe)",
+                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "Hata Detayı: $errorLog\nOtomasyon durduruldu ve donanım korumaya alındı.",
+                      style: TextStyle(color: Colors.red[800], fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

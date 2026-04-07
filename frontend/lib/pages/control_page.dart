@@ -54,7 +54,8 @@ class _ControlPageState extends State<ControlPage> {
                       child: StreamBuilder(
                         stream: controlRef.child("auto_mode").onValue,
                         builder: (context, snapshot) {
-                          bool isAuto = (snapshot.data?.snapshot.value ?? 0).toString() == "1";
+                          final autoVal = snapshot.data?.snapshot.value;
+                          bool isAuto = autoVal == true || autoVal == 1;
                           return SwitchListTile(
                             title: const Text("Otomatik Mod (AI)", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
                             subtitle: const Text("Ekstrem durumlarda AI koruma sağlar", style: TextStyle(color: Colors.white70, fontSize: 12)),
@@ -157,7 +158,8 @@ class _ControlPageState extends State<ControlPage> {
     return StreamBuilder(
       stream: ref.child(key).onValue,
       builder: (context, snapshot) {
-        bool isOn = (snapshot.data?.snapshot.value ?? 0).toString() == "1";
+        final rawVal = snapshot.data?.snapshot.value;
+        bool isOn = rawVal == true || rawVal == 1;
         return Container(
           decoration: BoxDecoration(
               color: Colors.white,
