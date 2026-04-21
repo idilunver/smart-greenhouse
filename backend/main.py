@@ -177,23 +177,7 @@ def handle_sensor_change(event):
     vpd = calculate_vpd(temp, hum)
     et_rate = round(vpd * 0.4, 2)
 
-    # Geçmiş Veri Kaydı (Her 10 dakikada bir)
-    if current_time - last_history_time > HISTORY_INTERVAL:
-        try:
-            db.reference('Greenhouse/History').push({
-                'temp': temp,
-                'hum': hum,
-                'soil': soil,
-                'lux': float(event.data.get('light_lux', 0)),
-                'co2': float(event.data.get('CO2', 0)),
-                'voltage': 12.4,
-                'timestamp': int(current_time)
-            })
-            last_history_time = current_time
-            print("[*] Geçmiş veri Firebase'e kaydedildi.")
-        except Exception as e:
-            print(f"History Hatası: {e}")
-
+    actions = {}
     # Akıllı Otomasyon (The Brain)
     if auto_mode:
         plant_name = "genel bitkiler"
@@ -203,7 +187,6 @@ def handle_sensor_change(event):
 
         target_rule = PLANT_RULES.get(plant_name, PLANT_RULES["genel bitkiler"])
         controls_ref = db.reference('Greenhouse/Controls')
-        actions = {}
 
         # Sıcaklık Kontrolü (Fan)
         if temp > target_rule["temp"][1]: actions['fan'] = True
@@ -255,6 +238,25 @@ def handle_sensor_change(event):
     if should_call_ai:
         ai_advice = get_gemini_advice(temp, hum, soil, vpd, et_rate, selected_plants)
         last_ai_time = current_time
+
+    # Geçmiş Veri Kaydı (Her 10 dakikada bir)
+    if current_time - last_history_time > HISTORY_INTERVAL:
+        try:
+            db.reference('Greenhouse/History').push({
+                'temp': temp,
+                'hum': hum,
+                'soil': soil,
+                'lux': sensor_state.get('light_lux', 0.0),
+                'co2': sensor_state.get('CO2', 0.0),
+                'voltage': 12.4,
+                'ai_advice': ai_advice, 
+                'ai_decision': "Sula" if actions.get('pump') else "Bekle", 
+                'timestamp': int(current_time)
+            })
+            last_history_time = current_time
+            print("[*] Geçmiş veri Firebase'e kaydedildi (AI destekli).")
+        except Exception as e:
+            print(f"History Hatası: {e}")
 
     # Firebase'e Yaz (Analiz)
     try:
