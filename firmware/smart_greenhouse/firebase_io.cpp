@@ -12,24 +12,18 @@ static FirebaseAuth   auth;
 static FirebaseConfig config;
 
 void firebase_init() {
-  config.database_url = FIREBASE_HOST;
+  config.database_url = FIREBASE_DATABASE_URL;
   config.api_key      = FIREBASE_API_KEY;
   config.token_status_callback = tokenStatusCallback;
 
+  // Email/Password auth — Firebase Console → Authentication → Sign-in method →
+  // Email/Password ENABLE olmalı, ve kullanıcı önceden oluşturulmuş olmalı.
+  auth.user.email    = FIREBASE_USER_EMAIL;
+  auth.user.password = FIREBASE_USER_PASSWORD;
+
   Firebase.reconnectWiFi(true);
-
-  // Anonymous auth — Firebase Console'da "Anonymous" sign-in metodu AÇIK olmalı
-  Serial.print("[Firebase] anonim giriş deneniyor");
-  if (Firebase.signUp(&config, &auth, "", "")) {
-    Serial.println(" OK");
-  } else {
-    Serial.printf(" HATA: %s\n", config.signer.signupError.message.c_str());
-    Serial.println("  ! Firebase Console → Authentication → Sign-in method →");
-    Serial.println("    Anonymous'u ENABLE yapmayı unutma.");
-  }
-
   Firebase.begin(&config, &auth);
-  Serial.println("[Firebase] init tamam");
+  Serial.println("[Firebase] init tamam (email/password)");
 }
 
 bool firebase_is_ready() { return Firebase.ready(); }
