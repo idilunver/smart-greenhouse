@@ -12,7 +12,7 @@
 // Röle mantığı — çoğu ucuz 5V 2-kanallı modül ACTIVE-LOW'dur
 // 1 = LOW sinyali röleyi AÇAR, 0 = HIGH sinyali KAPATIR
 // Modülün ters çalışıyorsa bunu 0 yap
-#define RELAY_ACTIVE_LOW 1
+#define RELAY_ACTIVE_LOW 0
 
 // ===================== I2C ADRESLERİ =====================
 #define BME_INNER_ADDR   0x76   // İç sensör: SDO → GND

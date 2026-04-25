@@ -31,7 +31,7 @@
 #define PIN_LDR_D        35
 #define PIN_RELAY_PUMP   26
 #define PIN_RELAY_FAN    27
-#define RELAY_ACTIVE_LOW 1
+#define RELAY_ACTIVE_LOW 0
 
 // ---- Toprak nem kalibrasyon ----
 #define SOIL_RAW_DRY   3000
