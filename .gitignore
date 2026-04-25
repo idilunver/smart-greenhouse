@@ -75,7 +75,3 @@ backend/serviceAccountKey.json
 backend/venv/
 backend/__pycache__/
 *.pyc
-
-# Firmware secrets (WiFi & Firebase credentials)
-firmware/**/secrets.h
-!firmware/**/secrets.h.example
