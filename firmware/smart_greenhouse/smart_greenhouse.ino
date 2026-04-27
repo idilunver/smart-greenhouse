@@ -1,26 +1,26 @@
 /**
- *  Akıllı Sera Kontrol Sistemi — ESP32 Firmware
- *  ---------------------------------------------
- *  Proje : smart-greenhouse-9fb8e
- *  Donanım:
+ *  Smart Greenhouse Control System — ESP32 Firmware
+ *  -------------------------------------------------
+ *  Project : smart-greenhouse-9fb8e
+ *  Hardware:
  *    - ESP32 DevKit V1
- *    - 2× BME280  (0x76 iç, 0x77 dış)
+ *    - 2× BME280  (0x76 inner, 0x77 outer)
  *    - BH1750    (0x23)
- *    - LM393     (dijital ışık anahtarı)
- *    - Kapasitif toprak nem sensörü (analog)
- *    - 5V 2 kanallı röle → 12V pompa + 12V fan
+ *    - LM393     (digital light switch)
+ *    - Capacitive soil moisture sensor (analog)
+ *    - 5V 2-channel relay → 12V pump + 12V fan
  *
- *  Mod: HİBRİT  (auto_mode=1 otonom, auto_mode=0 manuel)
+ *  Mode: HYBRID  (auto_mode=1 autonomous, auto_mode=0 manual)
  *
- *  ==== ARDUINO IDE KURULUMU ====
- *  1) Boards Manager → "esp32 by Espressif Systems" kur
- *  2) Tools → Board → "ESP32 Dev Module" seç
- *  3) Library Manager'dan kur:
+ *  ==== ARDUINO IDE SETUP ====
+ *  1) Boards Manager → install "esp32 by Espressif Systems"
+ *  2) Tools → Board → select "ESP32 Dev Module"
+ *  3) Install via Library Manager:
  *       - Adafruit BME280 Library         (Adafruit)
- *       - Adafruit Unified Sensor         (otomatik gelir)
+ *       - Adafruit Unified Sensor         (installed automatically)
  *       - BH1750                          (Christopher Laws)
  *       - Firebase Arduino Client Library for ESP8266 and ESP32  (Mobizt)
- *  4) secrets.h dosyasındaki FIREBASE_AUTH'u doldur
+ *  4) Fill in FIREBASE_AUTH in secrets.h
  *  5) Upload!
  */
 
@@ -32,7 +32,7 @@
 #include "firebase_io.h"
 
 static SensorData   gSensors;
-static ControlState gControl;   // default: auto_mode=1, diğerleri 0
+static ControlState gControl;   // default: auto_mode=1, all others 0
 
 static unsigned long tLastRead = 0;
 static unsigned long tLastPush = 0;
@@ -42,7 +42,7 @@ void setup() {
   Serial.begin(115200);
   delay(200);
   Serial.println("\n==============================");
-  Serial.println("  Akıllı Sera ESP32 Firmware");
+  Serial.println("  Smart Greenhouse ESP32 Firmware");
   Serial.println("==============================");
 
   actuators_init();
@@ -55,17 +55,17 @@ void setup() {
 void loop() {
   const unsigned long now = millis();
 
-  // WiFi düşerse yeniden bağlan
+  // Reconnect if WiFi drops
   if (!wifi_is_connected()) {
     static unsigned long tLastRetry = 0;
     if (now - tLastRetry >= 10000UL) {
       tLastRetry = now;
-      Serial.println("[WiFi] bağlantı kopuk — yeniden deneniyor");
+      Serial.println("[WiFi] connection lost — retrying");
       wifi_connect();
     }
   }
 
-  // 1) Sensörleri oku
+  // 1) Read sensors
   if (now - tLastRead >= SENSOR_READ_MS) {
     tLastRead = now;
     sensors_read(gSensors);
@@ -74,25 +74,25 @@ void loop() {
     print_sensors(gSensors);
   }
 
-  // 2) Firebase'den kontrol durumunu al
+  // 2) Fetch control state from Firebase
   if (now - tLastPoll >= CONTROL_POLL_MS) {
     tLastPoll = now;
     firebase_poll_control(gControl);
   }
 
-  // 3) Hibrit karar mantığı
+  // 3) Hybrid decision logic
   if (gControl.auto_mode == 1) {
     apply_auto_control(gSensors, gControl);
   }
 
-  // 4) Röleleri güncelle
+  // 4) Update relays
   apply_actuators(gControl);
 
-  // 5) Firebase'e verileri yaz
+  // 5) Write data to Firebase
   if (now - tLastPush >= FIREBASE_PUSH_MS) {
     tLastPush = now;
     firebase_push_sensors(gSensors);
-    // Otonom mod'da frontend gerçek durumu görebilsin
+    // Allow the frontend to observe the real state in autonomous mode
     if (gControl.auto_mode == 1) {
       firebase_push_control_state(gControl);
     }

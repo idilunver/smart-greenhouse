@@ -17,20 +17,20 @@ void firebase_init() {
   config.token_status_callback = tokenStatusCallback;
 
   // Email/Password auth — Firebase Console → Authentication → Sign-in method →
-  // Email/Password ENABLE olmalı, ve kullanıcı önceden oluşturulmuş olmalı.
+  // Email/Password must be ENABLED, and the user must be created in advance.
   auth.user.email    = FIREBASE_USER_EMAIL;
   auth.user.password = FIREBASE_USER_PASSWORD;
 
   Firebase.reconnectWiFi(true);
   Firebase.begin(&config, &auth);
-  Serial.println("[Firebase] init tamam (email/password)");
+  Serial.println("[Firebase] init complete (email/password)");
 }
 
 bool firebase_is_ready() { return Firebase.ready(); }
 
 void firebase_push_sensors(const SensorData& d) {
   if (!Firebase.ready()) {
-    Serial.println("[Firebase] hazır değil, /sensors atlandı");
+    Serial.println("[Firebase] not ready, /sensors skipped");
     return;
   }
   FirebaseJson j;
@@ -48,7 +48,7 @@ void firebase_push_sensors(const SensorData& d) {
   if (Firebase.RTDB.setJSON(&fbdo, FB_PATH_SENSORS, &j)) {
     Serial.println("[Firebase] /sensors OK");
   } else {
-    Serial.printf("[Firebase] /sensors HATA: %s\n", fbdo.errorReason().c_str());
+    Serial.printf("[Firebase] /sensors ERROR: %s\n", fbdo.errorReason().c_str());
   }
 }
 
@@ -59,22 +59,22 @@ void firebase_push_control_state(const ControlState& s) {
   j.set("fan",       s.fan);
   j.set("pump",      s.pump);
   j.set("light",     s.light);
-  // updateNode: sadece var olan key'leri günceller, diğerlerine dokunmaz
+  // updateNode: updates only existing keys, leaves all others untouched
   if (!Firebase.RTDB.updateNode(&fbdo, FB_PATH_CONTROL, &j)) {
-    Serial.printf("[Firebase] /control feedback HATA: %s\n", fbdo.errorReason().c_str());
+    Serial.printf("[Firebase] /control feedback ERROR: %s\n", fbdo.errorReason().c_str());
   }
 }
 
 void firebase_poll_control(ControlState& s) {
   if (!Firebase.ready()) return;
 
-  // auto_mode HER zaman okunur
+  // auto_mode is ALWAYS read
   if (Firebase.RTDB.getInt(&fbdo, String(FB_PATH_CONTROL) + "/auto_mode")) {
     s.auto_mode = fbdo.to<int>();
   }
 
-  // fan & pump sadece manuel mod'da Firebase'den alınır
-  // (auto mode'da ESP32'nin kendi hesapladığı değer geçerli)
+  // fan & pump are read from Firebase only in manual mode
+  // (in auto mode, the value computed by the ESP32 itself takes precedence)
   if (s.auto_mode == 0) {
     if (Firebase.RTDB.getInt(&fbdo, String(FB_PATH_CONTROL) + "/fan")) {
       s.fan = fbdo.to<int>();
@@ -84,7 +84,7 @@ void firebase_poll_control(ControlState& s) {
     }
   }
 
-  // light donanım yok ama state okunabilir
+  // light has no hardware but its state can be read
   if (Firebase.RTDB.getInt(&fbdo, String(FB_PATH_CONTROL) + "/light")) {
     s.light = fbdo.to<int>();
   }

@@ -4,10 +4,10 @@
 struct SensorData;   // forward decl
 
 struct ControlState {
-  int auto_mode = 1;   // 1 = otonom, 0 = manuel (Firebase)
+  int auto_mode = 1;   // 1 = autonomous, 0 = manual (Firebase)
   int fan       = 0;
   int pump      = 0;
-  int light     = 0;   // sözlükte var, donanım yok — yalnızca state
+  int light     = 0;   // present in schema, no hardware — state only
 };
 
 void actuators_init();

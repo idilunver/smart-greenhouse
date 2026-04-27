@@ -18,10 +18,10 @@ class _LoginPageState extends State<LoginPage> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
-    
-    // Simüle edilmiş güvenli giriş
+
+    // Simulated secure login
     await Future.delayed(const Duration(seconds: 1));
-    
+
     if (_emailController.text == "admin@sera.com" && _passwordController.text == "123456") {
       if (mounted) {
         Navigator.pushReplacement(
@@ -33,13 +33,13 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Hatalı e-posta veya şifre!"),
+            content: Text("Incorrect email address or password!"),
             backgroundColor: Colors.redAccent,
           ),
         );
       }
     }
-    
+
     setState(() => _isLoading = false);
   }
 
@@ -76,23 +76,23 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: -0.5),
                     ),
                     const Text(
-                      "Kurumsal Yönetim Portalı",
+                      "Enterprise Management Portal",
                       style: TextStyle(color: Colors.grey, fontSize: 13),
                     ),
                     const SizedBox(height: 40),
                     TextFormField(
                       controller: _emailController,
                       decoration: InputDecoration(
-                        labelText: "E-Posta",
-                        hintText: "E-postanızı giriniz",
+                        labelText: "E-Mail",
+                        hintText: "Enter your e-mail address",
                         prefixIcon: const Icon(Icons.email_outlined),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                         filled: true,
                         fillColor: Colors.grey[50],
                       ),
                       validator: (value) {
-                        if (value == null || value.isEmpty) return "E-posta alanı zorunludur";
-                        if (!value.contains("@")) return "Geçerli bir e-posta giriniz";
+                        if (value == null || value.isEmpty) return "E-mail field is required";
+                        if (!value.contains("@")) return "Please enter a valid e-mail address";
                         return null;
                       },
                     ),
@@ -101,15 +101,15 @@ class _LoginPageState extends State<LoginPage> {
                       controller: _passwordController,
                       obscureText: true,
                       decoration: InputDecoration(
-                        labelText: "Şifre",
+                        labelText: "Password",
                         prefixIcon: const Icon(Icons.lock_outline),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                         filled: true,
                         fillColor: Colors.grey[50],
                       ),
                       validator: (value) {
-                        if (value == null || value.isEmpty) return "Şifre alanı zorunludur";
-                        if (value.length < 6) return "Şifre en az 6 karakter olmalıdır";
+                        if (value == null || value.isEmpty) return "Password field is required";
+                        if (value.length < 6) return "Password must be at least 6 characters";
                         return null;
                       },
                     ),
@@ -125,15 +125,15 @@ class _LoginPageState extends State<LoginPage> {
                           elevation: 0,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
-                        child: _isLoading 
+                        child: _isLoading
                           ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Text("Sisteme Giriş Yap", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                          : const Text("Sign In", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                       ),
                     ),
                     const SizedBox(height: 16),
                     TextButton(
                       onPressed: () {},
-                      child: Text("Yardım mı lazım?", style: TextStyle(color: Colors.green[800], fontSize: 13)),
+                      child: Text("Need help?", style: TextStyle(color: Colors.green[800], fontSize: 13)),
                     ),
                   ],
                 ),

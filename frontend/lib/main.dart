@@ -41,7 +41,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// --- ANA NAVİGASYON ---
+// --- MAIN NAVIGATION ---
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
   @override
@@ -50,11 +50,11 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
-  
+
   final List<Widget> _pages = [
-    const DashboardPage(), 
-    const AIChatAnalysisPage(), 
-    const ChartsPage(), 
+    const DashboardPage(),
+    const AIChatAnalysisPage(),
+    const ChartsPage(),
     const ControlPage()
   ];
 
@@ -69,10 +69,10 @@ class _MainNavigationState extends State<MainNavigation> {
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) => setState(() => _selectedIndex = index),
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Genel Bakış'),
-          NavigationDestination(icon: Icon(Icons.auto_awesome_outlined), selectedIcon: Icon(Icons.auto_awesome), label: 'AI Analiz'),
-          NavigationDestination(icon: Icon(Icons.analytics_outlined), selectedIcon: Icon(Icons.analytics), label: 'Grafik'),
-          NavigationDestination(icon: Icon(Icons.settings_suggest_outlined), selectedIcon: Icon(Icons.settings_suggest), label: 'Kontrol'),
+          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Overview'),
+          NavigationDestination(icon: Icon(Icons.auto_awesome_outlined), selectedIcon: Icon(Icons.auto_awesome), label: 'AI Analysis'),
+          NavigationDestination(icon: Icon(Icons.analytics_outlined), selectedIcon: Icon(Icons.analytics), label: 'Charts'),
+          NavigationDestination(icon: Icon(Icons.settings_suggest_outlined), selectedIcon: Icon(Icons.settings_suggest), label: 'Control'),
         ],
       ),
     );

@@ -72,8 +72,8 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildErrorBanner(statusRef),
-                        
-                        // Üst Panel: AI ve Loglar
+
+                        // Top Panel: AI and Logs
                         if (isWide)
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,20 +91,20 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                               _buildEventLog(controlRef),
                             ],
                           ),
-                        
+
                         const SizedBox(height: 40),
-                        const Text("Kritik Sistem Parametreleri", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: -0.5)),
+                        const Text("Critical System Parameters", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: -0.5)),
                         const SizedBox(height: 16),
-                        
-                        // Kritik Kartlar: Mobilde Alt Alta/Kaydırılabilir, Web'de Yan Yana
-                        isWide 
+
+                        // Critical Cards: Stacked/Scrollable on mobile, side by side on web
+                        isWide
                           ? Row(
                               children: [
-                                Expanded(child: _buildCriticalCard("Sıcaklık", "${data['temp_inner'] ?? '0'}", "°C", Icons.thermostat_rounded, Colors.orange, tempAlert)),
+                                Expanded(child: _buildCriticalCard("Temperature", "${data['temp_inner'] ?? '0'}", "°C", Icons.thermostat_rounded, Colors.orange, tempAlert)),
                                 const SizedBox(width: 16),
-                                Expanded(child: _buildCriticalCard("Hava Nemi", "${data['humidity_inner'] ?? '0'}", "%", Icons.water_drop_rounded, Colors.blue, humidityAlert)),
+                                Expanded(child: _buildCriticalCard("Air Humidity", "${data['humidity_inner'] ?? '0'}", "%", Icons.water_drop_rounded, Colors.blue, humidityAlert)),
                                 const SizedBox(width: 16),
-                                Expanded(child: _buildCriticalCard("Toprak Nemi", "${data['soil_moisture'] ?? '0'}", "%", Icons.grass_rounded, Colors.brown, soilAlert)),
+                                Expanded(child: _buildCriticalCard("Soil Moisture", "${data['soil_moisture'] ?? '0'}", "%", Icons.grass_rounded, Colors.brown, soilAlert)),
                               ],
                             )
                           : GridView.count(
@@ -115,17 +115,17 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                               crossAxisSpacing: 12,
                               childAspectRatio: 0.85,
                               children: [
-                                _buildCriticalCard("Sıcaklık", "${data['temp_inner'] ?? '0'}", "°C", Icons.thermostat_rounded, Colors.orange, tempAlert),
-                                _buildCriticalCard("Hava Nemi", "${data['humidity_inner'] ?? '0'}", "%", Icons.water_drop_rounded, Colors.blue, humidityAlert),
-                                _buildCriticalCard("Toprak Nemi", "${data['soil_moisture'] ?? '0'}", "%", Icons.grass_rounded, Colors.brown, soilAlert),
+                                _buildCriticalCard("Temperature", "${data['temp_inner'] ?? '0'}", "°C", Icons.thermostat_rounded, Colors.orange, tempAlert),
+                                _buildCriticalCard("Air Humidity", "${data['humidity_inner'] ?? '0'}", "%", Icons.water_drop_rounded, Colors.blue, humidityAlert),
+                                _buildCriticalCard("Soil Moisture", "${data['soil_moisture'] ?? '0'}", "%", Icons.grass_rounded, Colors.brown, soilAlert),
                               ],
                             ),
 
                         const SizedBox(height: 40),
-                        const Text("Yardımcı Sensörler", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: -0.5)),
+                        const Text("Auxiliary Sensors", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: -0.5)),
                         const SizedBox(height: 16),
-                        
-                        // Diğer Sensörler: Yan yana grid (Web'de daha fazla sütun)
+
+                        // Other Sensors: Side-by-side grid (more columns on web)
                         GridView.count(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
@@ -134,11 +134,11 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                           crossAxisSpacing: 16,
                           childAspectRatio: isWide ? 3.5 : 4.5,
                           children: [
-                            _buildSensorRow("Dış Sıcaklık", "${data['temp_outer'] ?? '0'} °C", Icons.wb_cloudy_rounded, Colors.blueGrey, "Atmosfer"),
-                            _buildSensorRow("Dış Nem", "${data['humidity_outer'] ?? '0'} %", Icons.air_rounded, Colors.cyan, "Normal"),
-                            _buildSensorRow("Işık Şiddeti", "${data['light_lux'] ?? '0'} Lx", Icons.wb_sunny_rounded, Colors.amber, "Güneş"),
-                            _buildSensorRow("CO2 Seviyesi", "${data['CO2'] ?? '0'} ppm", Icons.cloud_circle_rounded, Colors.blueGrey, "Besin"),
-                            _buildSensorRow("Voltaj", "12.4 V", Icons.bolt_rounded, Colors.green, "Stabil"),
+                            _buildSensorRow("Outdoor Temperature", "${data['temp_outer'] ?? '0'} °C", Icons.wb_cloudy_rounded, Colors.blueGrey, "Atmosphere"),
+                            _buildSensorRow("Outdoor Humidity", "${data['humidity_outer'] ?? '0'} %", Icons.air_rounded, Colors.cyan, "Normal"),
+                            _buildSensorRow("Light Intensity", "${data['light_lux'] ?? '0'} Lx", Icons.wb_sunny_rounded, Colors.amber, "Solar"),
+                            _buildSensorRow("CO2 Level", "${data['CO2'] ?? '0'} ppm", Icons.cloud_circle_rounded, Colors.blueGrey, "Nutrient"),
+                            _buildSensorRow("Voltage", "12.4 V", Icons.bolt_rounded, Colors.green, "Stable"),
                           ],
                         ),
                       ],
@@ -153,20 +153,20 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
     );
   }
 
-  // ── AI TAVSİYESİ KARTI (CANLI GÜNCELLENEN VERSİYON) ──
+  // ── AI ADVISORY CARD (LIVE-UPDATING VERSION) ──
   Widget _buildAISection(DatabaseReference aiRef) {
     return StreamBuilder(
       stream: aiRef.onValue,
       builder: (context, snapshot) {
-        // Firebase'den veri gelene kadar bekleme değerleri
-        String advice = "Analiz ediliyor...";
+        // Default values while awaiting data from Firebase
+        String advice = "Analysing...";
         String etDisplay = "0.00";
 
         if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
           Map aiData = snapshot.data!.snapshot.value as Map;
           advice = aiData['advice']?.toString() ?? advice;
-          
-          // et_rate değerini alıp 2 basamaklı formata sokuyoruz
+
+          // Retrieve et_rate and format to 2 decimal places
           var rawEt = aiData['et_rate'] ?? 0;
           etDisplay = double.parse(rawEt.toString()).toStringAsFixed(2);
         }
@@ -184,7 +184,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                 children: [
                   const Icon(Icons.psychology, color: Colors.white, size: 22),
                   const SizedBox(width: 8),
-                  const Text("AI Tavsiyesi", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                  const Text("AI Advisory", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
                   const Spacer(),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -195,7 +195,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
               ),
               const SizedBox(height: 12),
               Text(
-                advice, 
+                advice,
                 style: const TextStyle(color: Colors.white, fontSize: 13, fontStyle: FontStyle.italic, height: 1.4),
               ),
             ],
@@ -205,7 +205,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
     );
   }
 
-  // ── SON OLAYLAR KARTI (CANLI LOG VERSİYONU) ──
+  // ── RECENT EVENTS CARD (LIVE LOG VERSION) ──
   Widget _buildEventLog(DatabaseReference controlRef) {
     DatabaseReference logsRef = FirebaseDatabase.instance.ref("Greenhouse/Logs");
 
@@ -214,7 +214,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
       builder: (context, snapshot) {
         if (!snapshot.hasData || snapshot.data!.snapshot.value == null) {
           return _buildStaticEventContainer(const [
-            Text("Henüz olay gerçekleşmedi.", style: TextStyle(fontSize: 10, color: Colors.grey)),
+            Text("No events have occurred yet.", style: TextStyle(fontSize: 10, color: Colors.grey)),
           ]);
         }
 
@@ -222,10 +222,10 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
         List<MapEntry> entries = dataMap.entries.toList();
         entries.sort((a, b) => (b.value['timestamp'] as int).compareTo(a.value['timestamp'] as int));
 
-        // Animasyon durumlarını kontrol et
-        bool isPumpRunning = entries.any((e) => e.value['type'] == 'pump' && e.value['msg'].contains('AÇILDI'));
-        bool isFanRunning = entries.any((e) => e.value['type'] == 'fan' && e.value['msg'].contains('AÇILDI'));
-        
+        // Check animation states
+        bool isPumpRunning = entries.any((e) => e.value['type'] == 'pump' && e.value['msg'].contains('ACTIVATED'));
+        bool isFanRunning = entries.any((e) => e.value['type'] == 'fan' && e.value['msg'].contains('ACTIVATED'));
+
         if (isFanRunning) { _fanController.repeat(); } else { _fanController.stop(); }
         if (isPumpRunning) { _pumpController.repeat(reverse: true); } else { _pumpController.stop(); }
 
@@ -237,20 +237,20 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
             Color color = Colors.blue;
             Widget? animatedIcon;
 
-            if (type == 'pump') { 
-              icon = Icons.water_drop; 
+            if (type == 'pump') {
+              icon = Icons.water_drop;
               color = Colors.blue;
               animatedIcon = ScaleTransition(scale: Tween(begin: 0.8, end: 1.2).animate(_pumpController), child: Icon(icon, size: 14, color: color));
             }
-            if (type == 'fan') { 
-              icon = Icons.air; 
+            if (type == 'fan') {
+              icon = Icons.air;
               color = Colors.cyan;
               animatedIcon = RotationTransition(turns: _fanController, child: Icon(icon, size: 14, color: color));
             }
             if (type == 'light') { icon = Icons.lightbulb; color = Colors.amber; }
 
             return _buildEventItem(
-              val['msg']?.toString() ?? "Olay",
+              val['msg']?.toString() ?? "Event",
               _formatTimestamp(val['timestamp'] as int),
               icon,
               color,
@@ -282,7 +282,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
             children: [
               Icon(Icons.notifications_active, color: Colors.orange[700], size: 20),
               const SizedBox(width: 8),
-              const Text("Son Olaylar", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              const Text("Recent Events", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
             ],
           ),
           const SizedBox(height: 12),
@@ -298,8 +298,8 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
       child: Row(
         children: [
           CircleAvatar(
-            radius: 14, 
-            backgroundColor: color.withOpacity(0.1), 
+            radius: 14,
+            backgroundColor: color.withOpacity(0.1),
             child: customIcon ?? Icon(icon, size: 14, color: color)
           ),
           const SizedBox(width: 10),
@@ -350,7 +350,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              isAlert ? "⚠️ DİKKAT" : "✅ Normal",
+              isAlert ? "⚠️ WARNING" : "✅ Normal",
               style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: isAlert ? Colors.red : Colors.green),
             ),
           ),
@@ -385,7 +385,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
     );
   }
 
-  // ── HATA (FAIL-SAFE) UYARI KARTI ──
+  // ── ERROR (FAIL-SAFE) WARNING CARD ──
   Widget _buildErrorBanner(DatabaseReference statusRef) {
     return StreamBuilder(
       stream: statusRef.onValue,
@@ -395,7 +395,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
         Map statusData = snapshot.data!.snapshot.value as Map;
         String errorLog = statusData['error_log']?.toString() ?? 'No errors';
 
-        if (errorLog == 'No errors') return const SizedBox.shrink(); // Hata yoksa yer kaplama
+        if (errorLog == 'No errors') return const SizedBox.shrink(); // No error — render nothing
 
         return Container(
           width: double.infinity,
@@ -415,12 +415,12 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      "Sistem Güvenli Modda (Fail-Safe)",
+                      "System in Safe Mode (Fail-Safe)",
                       style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      "Hata Detayı: $errorLog\nOtomasyon durduruldu ve donanım korumaya alındı.",
+                      "Error Detail: $errorLog\nAutomation halted and hardware placed under protection.",
                       style: TextStyle(color: Colors.red[800], fontSize: 13),
                     ),
                   ],

@@ -5,7 +5,7 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 class AIService {
   static GenerativeModel? _model;
 
-  // ─── Bitki Kütüphanesi: İdeal aralıklar ────────────────────────────────────
+  // ─── Plant Library: Ideal ranges ────────────────────────────────────────────
   static const Map<String, Map<String, dynamic>> _plantRules = {
     'Domates':    {'temp': [18, 28], 'hum': [60, 80], 'soil': [40, 60], 'vpd': [0.8, 1.5]},
     'Salatalık':  {'temp': [22, 30], 'hum': [70, 90], 'soil': [40, 60], 'vpd': [0.8, 1.6]},
@@ -14,27 +14,27 @@ class AIService {
     'Genel':      {'temp': [20, 30], 'hum': [50, 80], 'soil': [30, 60], 'vpd': [0.5, 1.5]},
   };
 
-  // ─── Model — System Instruction genel, değişmez ─────────────────────────────
+  // ─── Model — System Instruction: general, immutable ─────────────────────────
   static GenerativeModel _getOrCreateModel() {
     if (_model == null) {
       _model = GenerativeModel(
         model: 'gemini-2.0-flash',
         apiKey: Env.geminiApiKey,
         systemInstruction: Content.system(
-          'Sen akıllı bir seranın yaşayan zekası ve dijital koruyucususun. '
-          'Bir ziraat uzmanının bilgisine ve bir doğa dostunun sıcaklığına sahipsin. '
-          'Karmaşık sensör verilerini anlamlandırıp kullanıcıya rehberlik edersin. '
-          'Kişi isimleri kullanma. Samimi, bilge ve yardımcı bir üslup benimse. '
-          'Teknik terimleri doğalca kullan: VPD yüksekse "terleme artıyor", '
-          'CO2 düşükse "fotosentez yavaşlıyor" de. '
-          'Cevapların öz ve anlaşılır olsun; gereksiz teknik detaylardan kaçın.',
+          'You are the living intelligence and digital guardian of a smart greenhouse. '
+          'You possess the knowledge of an agricultural expert and the warmth of a nature enthusiast. '
+          'You interpret complex sensor data and provide guidance to the user. '
+          'Do not use personal names. Adopt a warm, wise, and helpful tone. '
+          'Use technical terms naturally: if VPD is high, say "transpiration is increasing"; '
+          'if CO2 is low, say "photosynthesis is slowing down". '
+          'Keep responses concise and clear; avoid unnecessary technical detail.',
         ),
       );
     }
     return _model!;
   }
 
-  // ─── Ana Yanıt Fonksiyonu ───────────────────────────────────────────────────
+  // ─── Main Response Function ──────────────────────────────────────────────────
   static Future<String> getChatResponse({
     required String message,
     required Map sensorData,
@@ -44,7 +44,7 @@ class AIService {
     try {
       final model = _getOrCreateModel();
 
-      // Bitki listesini düzenle
+      // Normalise plant list
       final rawPlants = settingsData['plants'];
       final List<String> plants = rawPlants is List
           ? rawPlants.map((p) => p.toString().split(' ').first).toList()
@@ -54,19 +54,19 @@ class AIService {
           ? ((controlsData['auto_mode'] == true) ? 1 : 0)
           : int.tryParse(controlsData['auto_mode'].toString()) ?? 0;
 
-      // Bitki kural özetini oluştur
+      // Build plant rules summary
       final StringBuffer plantRulesText = StringBuffer();
       for (final plant in plants) {
         final rule = _plantRules[plant] ?? _plantRules['Genel']!;
         plantRulesText.writeln(
-          '- $plant: Sıcaklık ${rule['temp'][0]}-${rule['temp'][1]}°C, '
-          'Nem %${rule['hum'][0]}-${rule['hum'][1]}, '
-          'Toprak %${rule['soil'][0]}-${rule['soil'][1]}, '
+          '- $plant: Temperature ${rule['temp'][0]}-${rule['temp'][1]}°C, '
+          'Humidity ${rule['hum'][0]}-${rule['hum'][1]}%, '
+          'Soil Moisture ${rule['soil'][0]}-${rule['soil'][1]}%, '
           'VPD ${rule['vpd'][0]}-${rule['vpd'][1]} kPa',
         );
       }
 
-      // Sensör değerlerini oku
+      // Read sensor values
       final double tempInner = double.tryParse(sensorData['temp_inner']?.toString() ?? '0') ?? 0;
       final double humInner  = double.tryParse(sensorData['humidity_inner']?.toString() ?? '0') ?? 0;
       final double soil      = double.tryParse(sensorData['soil_moisture']?.toString() ?? '0') ?? 0;
@@ -78,71 +78,71 @@ class AIService {
       final bool fanOn   = (controlsData['fan']   == 1 || controlsData['fan']   == true);
       final bool pumpOn  = (controlsData['pump']  == 1 || controlsData['pump']  == true);
       final bool lightOn = (controlsData['light'] == 1 || controlsData['light'] == true);
-      final String gece  = lux < 50 ? 'Gece (lux < 50, bitkiler dinlenmede)' : 'Gündüz';
+      final String gece  = lux < 50 ? 'Night (lux < 50, plants at rest)' : 'Daytime';
 
-      // ── Dinamik Bağlam Prompt'u ──────────────────────────────────────────
+      // ── Dynamic Context Prompt ───────────────────────────────────────────────
       final String contextPrompt = '''
-[SİSTEM BAĞLAMI — kullanıcıya bu bloğu gösterme]
+[SYSTEM CONTEXT — do not display this block to the user]
 
-=== SERA DURUMU ===
-Yetiştirilen Bitkiler: ${plants.join(', ')}
-Zaman Dilimi: $gece
+=== GREENHOUSE STATUS ===
+Cultivated Plants: ${plants.join(', ')}
+Time Window: $gece
 
-Sensörler (İç):
-  • Sıcaklık: ${tempInner}°C
-  • Nem: %$humInner
-  • Toprak Nemi: %$soil
-  • Işık: $lux lux
+Sensors (Inner):
+  • Temperature: ${tempInner}°C
+  • Humidity: $humInner%
+  • Soil Moisture: $soil%
+  • Light: $lux lux
   • CO₂: $co2 ppm
 
-Sensörler (Dış):
-  • Sıcaklık: ${tempOuter}°C
-  • Nem: %$humOuter
+Sensors (Outer):
+  • Temperature: ${tempOuter}°C
+  • Humidity: $humOuter%
 
-Aktüatör Durumları:
-  • Fan: ${fanOn ? 'AÇIK' : 'KAPALI'}
-  • Pompa: ${pumpOn ? 'AÇIK' : 'KAPALI'}
-  • Işık/Sisleme: ${lightOn ? 'AÇIK' : 'KAPALI'}
+Actuator States:
+  • Fan: ${fanOn ? 'ON' : 'OFF'}
+  • Pump: ${pumpOn ? 'ON' : 'OFF'}
+  • Light/Misting: ${lightOn ? 'ON' : 'OFF'}
 
-Çalışma Modu: ${autoMode == 1 ? 'OTOMATİK (auto_mode=1)' : 'MANUEL (auto_mode=0)'}
+Operating Mode: ${autoMode == 1 ? 'AUTOMATIC (auto_mode=1)' : 'MANUAL (auto_mode=0)'}
 
-=== BİTKİ İDEAL DEĞERLERİ ===
+=== PLANT IDEAL VALUES ===
 $plantRulesText
-=== AKSIYON KURALLARI (ÇOK ÖNEMLİ) ===
-• VPD > 1.5 kPa → Toprak nemini kontrol et, sulamayı tetikle.
-• Gece saatlerinde (lux < 50) sulamayı olabildiğince azalt.
-• CO₂ < 400 ppm → "Fotosentez yavaşlıyor" uyarısı ver.
-• Temp_inner > bitkinin maks sıcaklığı → Fan çalıştır.
+=== ACTION RULES (VERY IMPORTANT) ===
+• VPD > 1.5 kPa → Check soil moisture, trigger irrigation.
+• During night hours (lux < 50), minimise irrigation as much as possible.
+• CO₂ < 400 ppm → Issue warning: "Photosynthesis is slowing down".
+• Temp_inner > plant's max temperature → Activate fan.
 
-=== MOD DAVRANIŞ KURALLARI ===
-EĞER auto_mode == 1:
-  - Aksiyonu KENDİN al, kullanıcıya "… yaptım" diye bildir.
-  - Mesajının SONUNA görünmez aksiyon kodunu ekle.
-EĞER auto_mode == 0 (MANUEL):
-  - ASLA kendin aksiyon ALMA.
-  - "… yapmamı ister misin?" diye onay sor.
-  - Kullanıcı "Evet" derse mesajının sonuna aksiyon kodunu ekle.
+=== MODE BEHAVIOUR RULES ===
+IF auto_mode == 1:
+  - Take action YOURSELF and inform the user with "… done".
+  - Append the invisible action code to the END of your message.
+IF auto_mode == 0 (MANUAL):
+  - NEVER take action on your own.
+  - Ask for confirmation: "Would you like me to …?".
+  - If the user says "Yes", append the action code to the end of your message.
 
-=== AKSIYON KOD FORMATI ===
-Mesajın sonuna, boşluksuz ve büyük harfle:
+=== ACTION CODE FORMAT ===
+Append to the end of your message, without spaces, in uppercase:
 [ACTION:FAN:ON], [ACTION:FAN:OFF]
 [ACTION:PUMP:ON], [ACTION:PUMP:OFF]
 [ACTION:LIGHT:ON], [ACTION:LIGHT:OFF]
-Birden fazla olabilir. Gerekli değilse ekleme.
+Multiple codes may be included. Omit if not required.
 
 ===========================
 
-Kullanıcı Sorusu: $message
+User Question: $message
 ''';
 
       final response = await model.generateContent([Content.text(contextPrompt)]);
-      return response.text ?? 'Üzgünüm, şu an yanıt üretemiyorum.';
+      return response.text ?? 'I\'m sorry, I am unable to generate a response at this moment.';
     } catch (e) {
-      debugPrint('AI Hatası: $e');
+      debugPrint('AI Error: $e');
       if (e.toString().contains('429')) {
-        return 'Günlük AI kotası doldu, veriler normal şekilde izleniyor.';
+        return 'Daily AI quota exhausted, data continues to be monitored normally.';
       }
-      return 'Üzgünüm, AI yanıt veremiyor. Lütfen bağlantınızı kontrol edin.';
+      return 'I\'m sorry, the AI is currently unresponsive. Please check your connection.';
     }
   }
 }

@@ -8,7 +8,7 @@ void wifi_connect() {
   WiFi.mode(WIFI_STA);
   WiFi.setSleep(false);
   WiFi.begin(WIFI_SSID, WIFI_PASS);
-  Serial.printf("[WiFi] %s bağlanıyor", WIFI_SSID);
+  Serial.printf("[WiFi] connecting to %s", WIFI_SSID);
 
   unsigned long t0 = millis();
   while (WiFi.status() != WL_CONNECTED && millis() - t0 < 20000UL) {
@@ -20,7 +20,7 @@ void wifi_connect() {
     Serial.printf(" OK  IP=%s  RSSI=%d\n",
                   WiFi.localIP().toString().c_str(), WiFi.RSSI());
   } else {
-    Serial.println(" BAŞARISIZ — 10 sn sonra tekrar denenecek");
+    Serial.println(" FAILED — will retry in 10 s");
   }
 }
 
@@ -30,7 +30,7 @@ bool wifi_is_connected() {
 
 void ntp_init() {
   configTime(GMT_OFFSET_SEC, DAYLIGHT_OFFSET_SEC, NTP_SERVER);
-  Serial.print("[NTP] senkron bekleniyor");
+  Serial.print("[NTP] awaiting synchronisation");
   unsigned long t0 = millis();
   while (time(nullptr) < 1700000000L && millis() - t0 < 10000UL) {
     delay(200);

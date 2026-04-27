@@ -19,7 +19,7 @@ class ChartsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
-        title: const Text("Haftalık Analiz & Trendler", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: const Text("Weekly Analysis & Trends", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: Colors.black,
@@ -45,7 +45,7 @@ class ChartsPage extends StatelessWidget {
                         children: [
                           Icon(Icons.analytics_outlined, size: 64, color: Colors.grey),
                           SizedBox(height: 16),
-                          Text("Yeterli veri bulunamadı.", style: TextStyle(color: Colors.grey)),
+                          Text("Insufficient data available.", style: TextStyle(color: Colors.grey)),
                         ],
                       ),
                     );
@@ -80,12 +80,12 @@ class ChartsPage extends StatelessWidget {
                     crossAxisSpacing: 24,
                     childAspectRatio: isWide ? 1.4 : 1.1,
                     children: [
-                      _buildSfChart("İç Sıcaklık Değişimi (°C)", tempHistory, Colors.orange, "°C", 10, 45, true),
-                      _buildSfChart("Hava Nemi (%)", humidityHistory, Colors.blue, "%", 0, 100, false),
-                      _buildSfChart("Toprak Nemi (%)", soilHistory, Colors.brown, "%", 0, 100, false),
-                      _buildSfChart("Işık Şiddeti (Lux)", luxHistory, Colors.amber, " Lx", 0, 1200, false),
-                      _buildSfChart("CO2 Seviyesi (ppm)", co2History, Colors.blueGrey, " ppm", 300, 1200, false),
-                      _buildSfChart("Sistem Voltajı (V)", voltageHistory, Colors.green, "V", 10, 15, false),
+                      _buildSfChart("Inner Temperature Variation (°C)", tempHistory, Colors.orange, "°C", 10, 45, true),
+                      _buildSfChart("Air Humidity (%)", humidityHistory, Colors.blue, "%", 0, 100, false),
+                      _buildSfChart("Soil Moisture (%)", soilHistory, Colors.brown, "%", 0, 100, false),
+                      _buildSfChart("Light Intensity (Lux)", luxHistory, Colors.amber, " Lx", 0, 1200, false),
+                      _buildSfChart("CO2 Level (ppm)", co2History, Colors.blueGrey, " ppm", 300, 1200, false),
+                      _buildSfChart("System Voltage (V)", voltageHistory, Colors.green, "V", 10, 15, false),
                     ],
                   );
                 },
@@ -122,13 +122,13 @@ class ChartsPage extends StatelessWidget {
                   majorGridLines: const MajorGridLines(width: 0),
                   dateFormat: DateFormat('HH:mm'),
                   intervalType: DateTimeIntervalType.auto,
-                  title: const AxisTitle(text: 'Zaman', textStyle: TextStyle(fontSize: 10)),
+                  title: const AxisTitle(text: 'Time', textStyle: TextStyle(fontSize: 10)),
                 ),
                 primaryYAxis: NumericAxis(
                   minimum: min, maximum: max,
                   labelFormat: '{value}$unit',
                   plotBands: showIdealRange ? [
-                    PlotBand(isVisible: true, start: 18, end: 28, color: Colors.green.withOpacity(0.1), text: 'İDEAL', textStyle: const TextStyle(color: Colors.green, fontSize: 8, fontWeight: FontWeight.bold))
+                    PlotBand(isVisible: true, start: 18, end: 28, color: Colors.green.withOpacity(0.1), text: 'IDEAL', textStyle: const TextStyle(color: Colors.green, fontSize: 8, fontWeight: FontWeight.bold))
                   ] : [],
                 ),
                 series: <CartesianSeries>[

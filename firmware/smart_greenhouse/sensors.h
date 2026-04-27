@@ -1,18 +1,18 @@
 #pragma once
 #include <Arduino.h>
 
-// Tüm sensörlerden okunan tek paket — Firebase'e bu gider
+// Single data packet read from all sensors — transmitted to Firebase
 struct SensorData {
   float temp_inner     = 0;
   float temp_outer     = 0;
   float humidity_inner = 0;
   float humidity_outer = 0;
-  float soil_moisture  = 0;   // yüzde (0-100)
-  int   light_lux      = 0;   // BH1750 (gerçek ışık şiddeti)
-  int   light_digital  = 0;   // LM393 (0 = karanlık, 1 = aydınlık)
-  int   CO2            = 0;   // ppm — sensör yok, mock
-  float voltage        = 0;   // V — gerilim bölücü eklenmedi (0)
-  long  timestamp      = 0;   // Unix epoch (saniye)
+  float soil_moisture  = 0;   // percentage (0-100)
+  int   light_lux      = 0;   // BH1750 (actual illuminance)
+  int   light_digital  = 0;   // LM393 (0 = dark, 1 = bright)
+  int   CO2            = 0;   // ppm — no physical sensor, mocked
+  float voltage        = 0;   // V — voltage divider not yet connected (0)
+  long  timestamp      = 0;   // Unix epoch (seconds)
 };
 
 void sensors_init();

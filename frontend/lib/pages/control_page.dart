@@ -9,7 +9,7 @@ class ControlPage extends StatefulWidget {
 }
 
 class _ControlPageState extends State<ControlPage> {
-  // Sabit bitki listemiz
+  // Fixed plant list
   final List<String> allPlants = [
     "Domates 🍅",
     "Biber 🌶️",
@@ -26,7 +26,7 @@ class _ControlPageState extends State<ControlPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
-        title: const Text("Sistem Kontrolü", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: const Text("System Control", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: Colors.black,
@@ -34,7 +34,7 @@ class _ControlPageState extends State<ControlPage> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           bool isWide = constraints.maxWidth > 800;
-          
+
           return Center(
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: isWide ? 1000 : constraints.maxWidth),
@@ -43,7 +43,7 @@ class _ControlPageState extends State<ControlPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // --- OTOMATİK MOD ---
+                    // --- AUTOMATIC MODE ---
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -57,8 +57,8 @@ class _ControlPageState extends State<ControlPage> {
                           final autoVal = snapshot.data?.snapshot.value;
                           bool isAuto = autoVal == true || autoVal == 1;
                           return SwitchListTile(
-                            title: const Text("Otomatik Mod (AI)", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                            subtitle: const Text("Ekstrem durumlarda AI koruma sağlar", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                            title: const Text("Automatic Mode (AI)", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                            subtitle: const Text("AI provides protection in extreme conditions", style: TextStyle(color: Colors.white70, fontSize: 12)),
                             value: isAuto,
                             activeColor: Colors.white,
                             onChanged: (val) => controlRef.update({"auto_mode": val ? 1 : 0}),
@@ -68,37 +68,37 @@ class _ControlPageState extends State<ControlPage> {
                     ),
                     const SizedBox(height: 40),
 
-                    // --- MANUEL KONTROLLER ---
-                    const Text("Manuel Müdahale Üniteleri", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: -0.5)),
+                    // --- MANUAL CONTROLS ---
+                    const Text("Manual Intervention Units", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: -0.5)),
                     const SizedBox(height: 16),
-                    
-                    isWide 
+
+                    isWide
                       ? Row(
                           children: [
-                            Expanded(child: _buildActionTile(controlRef, "pump", "Su Pompası", Icons.water_drop_rounded, Colors.blue)),
+                            Expanded(child: _buildActionTile(controlRef, "pump", "Water Pump", Icons.water_drop_rounded, Colors.blue)),
                             const SizedBox(width: 16),
-                            Expanded(child: _buildActionTile(controlRef, "fan", "Tahliye Fanı", Icons.air_rounded, Colors.cyan)),
+                            Expanded(child: _buildActionTile(controlRef, "fan", "Exhaust Fan", Icons.air_rounded, Colors.cyan)),
                             const SizedBox(width: 16),
                             Expanded(child: _buildActionTile(controlRef, "light", "Grow Light", Icons.lightbulb_rounded, Colors.amber)),
                           ],
                         )
                       : Column(
                           children: [
-                            _buildActionTile(controlRef, "pump", "Su Pompası", Icons.water_drop_rounded, Colors.blue),
+                            _buildActionTile(controlRef, "pump", "Water Pump", Icons.water_drop_rounded, Colors.blue),
                             const SizedBox(height: 12),
-                            _buildActionTile(controlRef, "fan", "Tahliye Fanı", Icons.air_rounded, Colors.cyan),
+                            _buildActionTile(controlRef, "fan", "Exhaust Fan", Icons.air_rounded, Colors.cyan),
                             const SizedBox(height: 12),
                             _buildActionTile(controlRef, "light", "Grow Light", Icons.lightbulb_rounded, Colors.amber),
                           ],
                         ),
-                    
+
                     const SizedBox(height: 40),
 
-                    // --- BİTKİ SEÇİM ALANI ---
-                    const Text("Hedef Bitki Profilleme", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: -0.5)),
-                    const Text("AI analizleri bu verilere göre kalibre edilir.", style: TextStyle(fontSize: 13, color: Colors.grey)),
+                    // --- PLANT SELECTION AREA ---
+                    const Text("Target Plant Profiling", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: -0.5)),
+                    const Text("AI analyses are calibrated according to this data.", style: TextStyle(fontSize: 13, color: Colors.grey)),
                     const SizedBox(height: 20),
-                    
+
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
@@ -177,7 +177,7 @@ class _ControlPageState extends State<ControlPage> {
                     backgroundColor: isOn ? Colors.red[400] : color,
                     foregroundColor: Colors.white),
                 onPressed: () => ref.update({key: isOn ? 0 : 1}),
-                child: Text(isOn ? "KAPAT" : "AÇ")),
+                child: Text(isOn ? "OFF" : "ON")),
           ),
         );
       },

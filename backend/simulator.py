@@ -5,25 +5,25 @@ import time
 import os
 from dotenv import load_dotenv
 
-# --- Çevresel Değişkenleri Yükle ---
+# --- Load Environment Variables ---
 load_dotenv()
 
-# --- Firebase Bağlantısı ---
+# --- Firebase Connection ---
 CERT_PATH = os.getenv("SERVICE_ACCOUNT_KEY_PATH", "serviceAccountKey.json")
 FIREBASE_DB_URL = os.getenv("FIREBASE_DATABASE_URL")
 
 if not firebase_admin._apps:
     abs_cert_path = os.path.abspath(CERT_PATH)
     if not os.path.exists(abs_cert_path):
-        print(f"HATA: {abs_cert_path} bulunamadı!")
+        print(f"ERROR: {abs_cert_path} not found!")
         exit(1)
-        
+
     cred = credentials.Certificate(abs_cert_path)
     firebase_admin.initialize_app(cred, {
         'databaseURL': FIREBASE_DB_URL
     })
 
-# --- Dijital İkiz Durumu (State) ---
+# --- Digital Twin State ---
 state = {
     "temp_inner": 24.5,
     "humidity_inner": 55.0,
@@ -35,98 +35,98 @@ state = {
 
 def on_control_change(event):
     """
-    Firebase'den gelen kontrol emirlerini dinler.
-    
-    DÜZELTİLDİ: Artık db.get() yapmıyor — event.data içinden okuma yapıyor.
-    Bu, gereksiz bir ağ çağrısını ve gecikmeyi ortadan kaldırır.
+    Listens for control commands arriving from Firebase.
+
+    FIXED: No longer calls db.get() — reads directly from event.data.
+    This eliminates an unnecessary network call and associated latency.
     """
     global state
     if event.data is None:
         return
 
-    # İlk bağlantıda tüm Controls objesi gelir ("/" path'i)
+    # On initial connection, the full Controls object arrives (path "/")
     if isinstance(event.data, dict):
         state["fan_on"] = bool(event.data.get('fan', False))
         state["pump_on"] = bool(event.data.get('pump', False))
         state["light_on"] = bool(event.data.get('light', False))
-        print(f"[*] Kontroller yüklendi: Fan={state['fan_on']}, Pompa={state['pump_on']}, Işık={state['light_on']}")
+        print(f"[*] Controls loaded: Fan={state['fan_on']}, Pump={state['pump_on']}, Light={state['light_on']}")
         return
 
-    # Sonraki güncellemelerde spesifik bir yol gelir (örn. "/fan")
+    # Subsequent updates deliver a specific path (e.g. "/fan")
     path = event.path.strip("/")
     value = bool(event.data) if event.data != 0 else False
 
     if path == "fan":
         state["fan_on"] = value
-        print(f"[Stream] Fan {'AÇILDI ✅' if value else 'KAPATILDI 🔴'}")
+        print(f"[Stream] Fan {'ACTIVATED ✅' if value else 'DEACTIVATED 🔴'}")
     elif path == "pump":
         state["pump_on"] = value
-        print(f"[Stream] Pompa {'AÇILDI ✅' if value else 'KAPATILDI 🔴'}")
+        print(f"[Stream] Pump {'ACTIVATED ✅' if value else 'DEACTIVATED 🔴'}")
     elif path == "light":
         state["light_on"] = value
-        print(f"[Stream] Işık {'AÇILDI ✅' if value else 'KAPATILDI 🔴'}")
+        print(f"[Stream] Light {'ACTIVATED ✅' if value else 'DEACTIVATED 🔴'}")
 
 def update_physics():
-    """Gerçek dünya fiziğini simüle eder."""
+    """Simulates real-world physical dynamics."""
     global state
-    
-    ambient_temp = 18.2  # Dış ortam sıcaklığı
-    ambient_hum = 45.0   # Dış ortam nemi
-    
+
+    ambient_temp = 18.2  # Ambient (outdoor) temperature
+    ambient_hum = 45.0   # Ambient (outdoor) humidity
+
     # ---------------------------------------------------------
-    # NOT: ARKADAŞIN SUNUCUYU AÇIP DATALARI GÖNDERMEYE BAŞLADIĞINDA,
-    # BU DOSYAYI ÇALIŞTIRMAYI DURDUR! Aksi halde çakışma olur.
+    # NOTE: STOP RUNNING THIS FILE ONCE THE COMPANION SERVER
+    # STARTS SENDING REAL DATA! Otherwise a data conflict will occur.
     # ---------------------------------------------------------
 
-    # 1. Sıcaklık Fiziği
+    # 1. Temperature Physics
     if state["fan_on"]:
-        # Fan açılınca sıcaklık daha hızlı düşer
+        # When the fan is active, temperature drops more rapidly
         state["temp_inner"] -= random.uniform(0.1, 0.2)
     else:
-        # Fan kapalıyken, sıcaklık dış ortam sıcaklığına yavaşça uyum sağlar
+        # When the fan is inactive, temperature gradually converges to ambient
         if state["temp_inner"] > ambient_temp:
             state["temp_inner"] -= random.uniform(0.01, 0.03)
         else:
             state["temp_inner"] += random.uniform(0.01, 0.05)
-    
-    # İçeride kendi ısınma faktörü (cihazlar, güneş)
+
+    # Internal self-heating factor (devices, solar gain)
     state["temp_inner"] += random.uniform(0.00, 0.02)
-    
-    # 2. Toprak Nemi Fiziği
+
+    # 2. Soil Moisture Physics
     if state["pump_on"]:
-        state["soil_moisture"] += random.uniform(0.5, 1.2)  # Pompa çalışınca su artar
+        state["soil_moisture"] += random.uniform(0.5, 1.2)  # Soil moisture increases when the pump is active
     else:
-        state["soil_moisture"] -= random.uniform(0.02, 0.08)  # Doğal buharlaşma
-        
-    # 3. Nem Fiziği
+        state["soil_moisture"] -= random.uniform(0.02, 0.08)  # Natural evapotranspiration
+
+    # 3. Humidity Physics
     if state["light_on"]:
-        state["humidity_inner"] += random.uniform(0.5, 1.0)  # Sisleme çalışıyor
+        state["humidity_inner"] += random.uniform(0.5, 1.0)  # Misting system active
     elif state["fan_on"]:
-        state["humidity_inner"] -= random.uniform(0.2, 0.5)  # Fan kuruttukça nem düşer
+        state["humidity_inner"] -= random.uniform(0.2, 0.5)  # Humidity decreases as the fan ventilates
     else:
         if state["humidity_inner"] > ambient_hum:
             state["humidity_inner"] -= random.uniform(0.02, 0.05)
         else:
             state["humidity_inner"] += random.uniform(0.02, 0.05)
 
-    # Sınırları Koru
+    # Enforce Boundaries
     state["temp_inner"] = max(15.0, min(40.0, state["temp_inner"]))
     state["soil_moisture"] = max(5.0, min(95.0, state["soil_moisture"]))
     state["humidity_inner"] = max(20.0, min(95.0, state["humidity_inner"]))
 
 def start_simulating():
-    print(">>> Akıllı Simülatör (Digital Twin) Aktif...")
-    print(">>> Veri gönderme aralığı: 15 saniye (Kota Koruma Modu)")
+    print(">>> Smart Simulator (Digital Twin) Active...")
+    print(">>> Data transmission interval: 15 seconds (Quota Protection Mode)")
     sensors_ref = db.reference('Greenhouse/Sensors')
-    
-    # Controls düğümünü dinlemeye başla
-    # Stream kopunca firebase-admin otomatik yeniden bağlanır
+
+    # Begin listening to the Controls node
+    # firebase-admin automatically reconnects on stream disconnection
     db.reference('Greenhouse/Controls').listen(on_control_change)
-    
+
     try:
         while True:
             update_physics()
-            
+
             data = {
                 "temp_inner": round(state["temp_inner"], 1),
                 "temp_outer": 18.2,
@@ -136,23 +136,23 @@ def start_simulating():
                 "light_lux": 500 + random.randint(-50, 50),
                 "CO2": 600 + random.randint(-20, 20),
             }
-            
+
             sensors_ref.update(data)
             print(
-                f"[Dijital İkiz] "
+                f"[Digital Twin] "
                 f"T={data['temp_inner']}°C | "
-                f"Nem={data['humidity_inner']}% | "
-                f"Toprak={data['soil_moisture']}% | "
+                f"Hum={data['humidity_inner']}% | "
+                f"Soil={data['soil_moisture']}% | "
                 f"Fan={'ON' if state['fan_on'] else 'off'} | "
-                f"Pompa={'ON' if state['pump_on'] else 'off'}"
+                f"Pump={'ON' if state['pump_on'] else 'off'}"
             )
 
-            # KOTA YÖNETİMİ: 15 saniye aralık
-            # Günde 5760 yerine ~1920 Firebase yazma işlemi
+            # QUOTA MANAGEMENT: 15-second interval
+            # ~1920 Firebase write operations per day instead of 5760
             time.sleep(15)
 
     except KeyboardInterrupt:
-        print("\n>>> Simülatör durduruldu.")
+        print("\n>>> Simulator stopped.")
 
 if __name__ == "__main__":
     start_simulating()

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../services/ai_service.dart';
 
-// ─── Veri Modelleri ──────────────────────────────────────────────────────────
+// ─── Data Models ─────────────────────────────────────────────────────────────
 
 class Conversation {
   final String id;
@@ -13,7 +13,7 @@ class Conversation {
   Conversation({required this.id, required this.title, required this.messages});
 }
 
-// ─── Sayfa ───────────────────────────────────────────────────────────────────
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 class AIChatAnalysisPage extends StatefulWidget {
   const AIChatAnalysisPage({super.key});
@@ -27,21 +27,21 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
   final ScrollController _scrollController = ScrollController();
   bool _isLoading = false;
 
-  // ─── Sohbet Listesi ──────────────────────────────────────────────────────
+  // ─── Conversation List ────────────────────────────────────────────────────
   final List<Conversation> _conversations = [];
   int _activeConversationIndex = 0;
 
-  // ─── Firebase Stream Abonelikleri ─────────────────────────────────────────
+  // ─── Firebase Stream Subscriptions ───────────────────────────────────────
   StreamSubscription? _sensorSub;
   StreamSubscription? _settingsSub;
   StreamSubscription? _controlsSub;
 
-  // ─── Canlı Veri (Stream'den güncellenir) ──────────────────────────────────
+  // ─── Live Data (updated from stream) ─────────────────────────────────────
   Map _latestSensorData   = {};
   Map _latestSettingsData = {};
   Map _latestControlsData = {};
 
-  // ─── Aksiyon Geri Bildirimi (Snackbar) ────────────────────────────────────
+  // ─── Action Feedback (Snackbar) ───────────────────────────────────────────
   String? _lastActionMsg;
 
   @override
@@ -61,10 +61,10 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
     super.dispose();
   }
 
-  // ─── Firebase Dinleyicileri ───────────────────────────────────────────────
+  // ─── Firebase Listeners ───────────────────────────────────────────────────
 
   void _startFirebaseStreams() {
-    // Sensörler
+    // Sensors
     _sensorSub = FirebaseDatabase.instance
         .ref('Greenhouse/Sensors')
         .onValue
@@ -74,7 +74,7 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
       }
     });
 
-    // Ayarlar (bitki listesi, auto_mode vb.)
+    // Settings (plant list, auto_mode, etc.)
     _settingsSub = FirebaseDatabase.instance
         .ref('Greenhouse/Settings')
         .onValue
@@ -84,7 +84,7 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
       }
     });
 
-    // Kontroller (fan, pump, light, auto_mode)
+    // Controls (fan, pump, light, auto_mode)
     _controlsSub = FirebaseDatabase.instance
         .ref('Greenhouse/Controls')
         .onValue
@@ -95,9 +95,9 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
     });
   }
 
-  // ─── Aksiyon Ayrıştırıcı ─────────────────────────────────────────────────
+  // ─── Action Parser ────────────────────────────────────────────────────────
 
-  /// AI cevabındaki [ACTION:DEVICE:STATE] kodlarını yakalar, Firebase'e yazar.
+  /// Captures [ACTION:DEVICE:STATE] codes from the AI response and writes them to Firebase.
   void _executeActions(String response) {
     final actionRegex = RegExp(r'\[ACTION:(\w+):(\w+)\]');
     final matches = actionRegex.allMatches(response.toUpperCase());
@@ -119,22 +119,22 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
 
       final String deviceLabel = switch (device) {
         'fan'   => 'Fan',
-        'pump'  => 'Pompa',
-        'light' => 'Işık/Sisleme',
+        'pump'  => 'Pump',
+        'light' => 'Light/Misting',
         _       => device,
       };
-      actionLabels.add('$deviceLabel ${state == "ON" ? "AÇILDI ✅" : "KAPATILDI 🔴"}');
+      actionLabels.add('$deviceLabel ${state == "ON" ? "ACTIVATED ✅" : "DEACTIVATED 🔴"}');
     }
 
     if (updates.isNotEmpty) {
       ref.update(updates).then((_) {
-        debugPrint('[ACTION] Firebase güncellendi: $updates');
+        debugPrint('[ACTION] Firebase updated: $updates');
         if (mounted) {
           setState(() => _lastActionMsg = actionLabels.join(' • '));
           _showActionSnackbar(actionLabels.join(' • '));
         }
       }).catchError((e) {
-        debugPrint('[ACTION] Firebase yazma hatası: $e');
+        debugPrint('[ACTION] Firebase write error: $e');
       });
     }
   }
@@ -148,7 +148,7 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                '⚡ Aksiyon Alındı: $message',
+                '⚡ Action Executed: $message',
                 style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
               ),
             ),
@@ -162,17 +162,17 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
     );
   }
 
-  // ─── Sohbet Yönetimi ─────────────────────────────────────────────────────
+  // ─── Conversation Management ──────────────────────────────────────────────
 
   void _createNewConversation() {
     final newId = DateTime.now().millisecondsSinceEpoch.toString();
     final newConv = Conversation(
       id: newId,
-      title: 'Sohbet ${_conversations.length + 1}',
+      title: 'Conversation ${_conversations.length + 1}',
       messages: [
         {
           'role': 'ai',
-          'text': 'Merhaba! Ben Sera Asistanınız. 🌿\nBitkileriniz hakkında ne bilmek istersiniz?',
+          'text': 'Hello! I am your Greenhouse Assistant. 🌿\nWhat would you like to know about your plants?',
         }
       ],
     );
@@ -198,7 +198,7 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
 
   void _switchConversation(int index) => setState(() => _activeConversationIndex = index);
 
-  // ─── Mesaj Gönderme ───────────────────────────────────────────────────────
+  // ─── Message Sending ──────────────────────────────────────────────────────
 
   Future<void> _handleSendMessage() async {
     if (_controller.text.trim().isEmpty || _isLoading) return;
@@ -207,7 +207,7 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
     final String userMsg = _controller.text.trim();
     final activeConv = _conversations[_activeConversationIndex];
 
-    // Sohbet başlığını ilk kullanıcı mesajına göre güncelle
+    // Update conversation title based on the first user message
     if (activeConv.messages.length == 1) {
       activeConv.title = userMsg.length > 30 ? '${userMsg.substring(0, 30)}…' : userMsg;
     }
@@ -221,7 +221,7 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
     _scrollToBottom();
 
     try {
-      // AI'ya tam bağlam gönder (sensör + ayarlar + kontroller)
+      // Send full context to AI (sensors + settings + controls)
       String rawResponse = await AIService.getChatResponse(
         message:      userMsg,
         sensorData:   _latestSensorData,
@@ -229,10 +229,10 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
         controlsData: _latestControlsData,
       );
 
-      // 1. Gizli aksiyon kodlarını yakala ve Firebase'e uygula
+      // 1. Capture hidden action codes and apply them to Firebase
       _executeActions(rawResponse);
 
-      // 2. Kullanıcıya [ACTION:...] kodlarını gösterme — temizle
+      // 2. Strip [ACTION:...] codes before displaying response to the user
       final String cleanResponse = rawResponse
           .replaceAll(RegExp(r'\[ACTION:[^\]]*\]', caseSensitive: false), '')
           .trim();
@@ -242,11 +242,11 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
         _isLoading = false;
       });
     } catch (e) {
-      debugPrint('_handleSendMessage HATA: $e');
+      debugPrint('_handleSendMessage ERROR: $e');
       setState(() {
         activeConv.messages.add({
           'role': 'ai',
-          'text': 'Sistem Hatası: Lütfen bağlantınızı kontrol edin.',
+          'text': 'System Error: Please check your connection.',
         });
         _isLoading = false;
       });
@@ -282,7 +282,7 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
         return Scaffold(
           appBar: AppBar(
             title: const Text(
-              '🤖 AI Sera Danışmanı',
+              '🤖 AI Greenhouse Advisor',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
             leading: isMobile
@@ -293,7 +293,7 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
                     ),
                   )
                 : null,
-            // Sağ üstte mod göstergesi
+            // Mode indicator in the top-right corner
             actions: [
               if (_latestControlsData.isNotEmpty)
                 Padding(
@@ -304,7 +304,7 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
                 TextButton.icon(
                   onPressed: _createNewConversation,
                   icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Yeni Sohbet'),
+                  label: const Text('New Chat'),
                   style: TextButton.styleFrom(foregroundColor: Colors.green[800]),
                 ),
               const SizedBox(width: 8),
@@ -313,18 +313,18 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
           drawer: isMobile ? _buildSidebar(isMobile: true) : null,
           body: Row(
             children: [
-              // Sol panel — sadece web'de sabit
+              // Left panel — fixed on web only
               if (!isMobile) _buildSidebar(isMobile: false),
 
-              // Ana sohbet alanı
+              // Main chat area
               Expanded(
                 child: Container(
                   color: Colors.white,
                   child: activeConv == null
-                      ? const Center(child: Text('Yeni bir sohbet başlatın'))
+                      ? const Center(child: Text('Start a new conversation'))
                       : Column(
                           children: [
-                            // Mesaj listesi
+                            // Message list
                             Expanded(
                               child: ListView.builder(
                                 controller: _scrollController,
@@ -340,7 +340,7 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
                               ),
                             ),
 
-                            // Yükleniyor göstergesi
+                            // Loading indicator
                             if (_isLoading)
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -367,7 +367,7 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
     );
   }
 
-  // ─── Widget: Mod Rozeti ───────────────────────────────────────────────────
+  // ─── Widget: Mode Badge ───────────────────────────────────────────────────
 
   Widget _buildModeBadge() {
     final int autoMode = ((_latestControlsData['auto_mode'] ?? 0) == true ||
@@ -395,7 +395,7 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
           ),
           const SizedBox(width: 4),
           Text(
-            isAuto ? 'Otomasyon' : 'Manuel',
+            isAuto ? 'Automation' : 'Manual',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
@@ -407,7 +407,7 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
     );
   }
 
-  // ─── Widget: Mesaj Balonu ─────────────────────────────────────────────────
+  // ─── Widget: Message Bubble ───────────────────────────────────────────────
 
   Widget _buildMessageBubble(
       String text, bool isUser, BoxConstraints constraints, bool isMobile) {
@@ -472,7 +472,7 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
                   child: Row(
                     children: [
                       const Text(
-                        'Sohbet Geçmişi',
+                        'Chat History',
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const Spacer(),
@@ -487,7 +487,7 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
               const Padding(
                 padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
                 child: Text(
-                  'SOHBETLER',
+                  'CONVERSATIONS',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
@@ -551,7 +551,7 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
     );
   }
 
-  // ─── Widget: Giriş Alanı ─────────────────────────────────────────────────
+  // ─── Widget: Input Area ───────────────────────────────────────────────────
 
   Widget _buildInputArea(bool isMobile) {
     return Container(
@@ -570,7 +570,7 @@ class _AIChatAnalysisPageState extends State<AIChatAnalysisPage> {
               maxLines: 4,
               onSubmitted: (_) => _handleSendMessage(),
               decoration: InputDecoration(
-                hintText: 'Sera asistanına sor…',
+                hintText: 'Ask the greenhouse assistant…',
                 filled: true,
                 fillColor: const Color(0xFFF8FAFC),
                 border: OutlineInputBorder(
