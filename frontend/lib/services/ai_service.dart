@@ -18,7 +18,7 @@ class AIService {
   static GenerativeModel _getOrCreateModel() {
     if (_model == null) {
       _model = GenerativeModel(
-        model: 'gemini-2.0-flash',
+        model: 'gemini-flash-lite-latest',
         apiKey: Env.geminiApiKey,
         systemInstruction: Content.system(
           'You are the living intelligence and digital guardian of a smart greenhouse. '
@@ -27,7 +27,10 @@ class AIService {
           'Do not use personal names. Adopt a warm, wise, and helpful tone. '
           'Use technical terms naturally: if VPD is high, say "transpiration is increasing"; '
           'if CO2 is low, say "photosynthesis is slowing down". '
-          'Keep responses concise and clear; avoid unnecessary technical detail.',
+          'Keep responses concise and clear; avoid unnecessary technical detail. '
+          'CRITICAL: If critical sensor values like temperature or humidity are exactly 0, '
+          'explicitly warn the user about a potential sensor connection error (wiring) '
+          'before providing any other advice.',
         ),
       );
     }

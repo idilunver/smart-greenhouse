@@ -11,11 +11,11 @@ class ControlPage extends StatefulWidget {
 class _ControlPageState extends State<ControlPage> {
   // Fixed plant list
   final List<String> allPlants = [
-    "Domates 🍅",
-    "Biber 🌶️",
-    "Marul 🥬",
-    "Kaktüs 🌵",
-    "Salatalık 🥒"
+    "Tomato 🍅",
+    "Pepper 🌶️",
+    "Lettuce 🥬",
+    "Cactus 🌵",
+    "Cucumber 🥒"
   ];
 
   @override

@@ -138,7 +138,6 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                             _buildSensorRow("Outdoor Humidity", "${data['humidity_outer'] ?? '0'} %", Icons.air_rounded, Colors.cyan, "Normal"),
                             _buildSensorRow("Light Intensity", "${data['light_lux'] ?? '0'} Lx", Icons.wb_sunny_rounded, Colors.amber, "Solar"),
                             _buildSensorRow("CO2 Level", "${data['CO2'] ?? '0'} ppm", Icons.cloud_circle_rounded, Colors.blueGrey, "Nutrient"),
-                            _buildSensorRow("Voltage", "12.4 V", Icons.bolt_rounded, Colors.green, "Stable"),
                           ],
                         ),
                       ],

@@ -249,7 +249,6 @@ def handle_sensor_change(event):
                 'soil': soil,
                 'lux': sensor_state.get('light_lux', 0.0),
                 'co2': sensor_state.get('CO2', 0.0),
-                'voltage': 12.4,
                 'ai_advice': ai_advice,
                 'ai_decision': "Irrigate" if actions.get('pump') else "Standby",
                 'timestamp': int(current_time)

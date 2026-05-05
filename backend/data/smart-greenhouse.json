@@ -1,0 +1,639 @@
+{
+  "AI_Analysis": {
+    "advice": "Selam! Domateslerin ve salatalıkların bu ılıman havayı sevse de, marullarımızın biraz serinlemeye ve nem artışına ihtiyacı var. VPD değerimiz biraz yüksek; sulama sistemini hafifçe tetikleyerek ortamı bitkilerimiz için daha ferah hale getireceğim.",
+    "et_rate": 0.67,
+    "last_sync": "13:38:08",
+    "vpd_val": 1.68
+  },
+  "Controls": {
+    "auto_mode": 0,
+    "fan": 0,
+    "light": 0,
+    "pump": 0
+  },
+  "History": {
+    "-OoTpQ7qr-oz8rX8S644": {
+      "co2": 771,
+      "hum": 69,
+      "lux": 523,
+      "soil": 36,
+      "temp": 26.5,
+      "timestamp": 1774338814,
+      "voltage": 12.4
+    },
+    "-OoTqMS9tv-_y60dciqv": {
+      "hum": 56.4,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774339061
+    },
+    "-OoTriO8mBnpHCsImSbp": {
+      "co2": 594,
+      "hum": 57.2,
+      "lux": 542,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774339417,
+      "voltage": 12.4
+    },
+    "-OoTse72b49J3U1VS7KK": {
+      "hum": 55.8,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774339662
+    },
+    "-OoTu0E-uwIA_YWQwE64": {
+      "co2": 589,
+      "hum": 55.2,
+      "lux": 540,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774340019,
+      "voltage": 12.4
+    },
+    "-OoTuwp9jupzS0UJ1MiD": {
+      "hum": 56.5,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774340263
+    },
+    "-OoTwInMF8mra2xUciz1": {
+      "co2": 752,
+      "hum": 46,
+      "lux": 573,
+      "soil": 26,
+      "temp": 33.5,
+      "timestamp": 1774340619,
+      "voltage": 12.4
+    },
+    "-OoTxEMu3_gSRRwzWqx9": {
+      "hum": 68,
+      "soil": 54,
+      "temp": 25.7,
+      "timestamp": 1774340863
+    },
+    "-OoTyaKE5XtnhGj2021H": {
+      "co2": 593,
+      "hum": 56.1,
+      "lux": 486,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774341219,
+      "voltage": 12.4
+    },
+    "-OoTzWrUuZuJSa7p3YUw": {
+      "hum": 68,
+      "soil": 30,
+      "temp": 23.5,
+      "timestamp": 1774341463
+    },
+    "-OoU-soeddyzj0lyDKba": {
+      "co2": 596,
+      "hum": 56.5,
+      "lux": 538,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774341819,
+      "voltage": 12.4
+    },
+    "-OoU0oMUj2q7BsabNqCG": {
+      "hum": 58.8,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774342063
+    },
+    "-OoU2AexWYdLBnts_ybb": {
+      "co2": 798,
+      "hum": 48,
+      "lux": 214,
+      "soil": 60,
+      "temp": 33.4,
+      "timestamp": 1774342421,
+      "voltage": 12.4
+    },
+    "-OoU35rll0gdU-8oL6Un": {
+      "hum": 52.5,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774342663
+    },
+    "-OoU4TCLEN11jva6Fn-p": {
+      "co2": 981,
+      "hum": 50,
+      "lux": 607,
+      "soil": 49,
+      "temp": 23.6,
+      "timestamp": 1774343021,
+      "voltage": 12.4
+    },
+    "-OoU5Ov7yBtWErvevp03": {
+      "hum": 58,
+      "soil": 36,
+      "temp": 29.4,
+      "timestamp": 1774343266
+    },
+    "-OoU6ks2L9RE5-Sx0HA0": {
+      "co2": 505,
+      "hum": 63,
+      "lux": 666,
+      "soil": 49,
+      "temp": 25.5,
+      "timestamp": 1774343622,
+      "voltage": 12.4
+    },
+    "-OoU7gV9c-YMNHxG7Jm6": {
+      "hum": 66,
+      "soil": 19,
+      "temp": 23.8,
+      "timestamp": 1774343866
+    },
+    "-OoU92QhS2A2EJuRIF_D": {
+      "co2": 747,
+      "hum": 56,
+      "lux": 501,
+      "soil": 37,
+      "temp": 25.6,
+      "timestamp": 1774344222,
+      "voltage": 12.4
+    },
+    "-OoU9z-a83qlCbIp5e2g": {
+      "hum": 45,
+      "soil": 15,
+      "temp": 31.5,
+      "timestamp": 1774344466
+    },
+    "-OoUBL9z3kTdpKHXBYy6": {
+      "co2": 459,
+      "hum": 56,
+      "lux": 313,
+      "soil": 47,
+      "temp": 25.5,
+      "timestamp": 1774344823,
+      "voltage": 12.4
+    },
+    "-OoUCGiYdztcWz_wjTD-": {
+      "hum": 43.1,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774345067
+    },
+    "-OoUDci6hcEkK3OXp7YX": {
+      "co2": 580,
+      "hum": 46.6,
+      "lux": 506,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774345423,
+      "voltage": 12.4
+    },
+    "-OoUEZSlCJwvMocHfF05": {
+      "hum": 50,
+      "soil": 46,
+      "temp": 31.8,
+      "timestamp": 1774345668
+    },
+    "-OoUFvkMhHQdpyavljmE": {
+      "co2": 751,
+      "hum": 66,
+      "lux": 300,
+      "soil": 21,
+      "temp": 34.2,
+      "timestamp": 1774346026,
+      "voltage": 12.4
+    },
+    "-OoUGrJ6EFRWo-0jfpVr": {
+      "hum": 63,
+      "soil": 34,
+      "temp": 23.9,
+      "timestamp": 1774346270
+    },
+    "-OoUIDYCVR5Sn0dmYLmN": {
+      "co2": 495,
+      "hum": 66,
+      "lux": 264,
+      "soil": 58,
+      "temp": 31.6,
+      "timestamp": 1774346627,
+      "voltage": 12.4
+    },
+    "-OoUJ8pSqF6ct61SWr1Z": {
+      "hum": 55,
+      "soil": 16,
+      "temp": 31.6,
+      "timestamp": 1774346870
+    },
+    "-OoUKWKv2A4qH0UGW1OD": {
+      "co2": 585,
+      "hum": 51.8,
+      "lux": 459,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774347228,
+      "voltage": 12.4
+    },
+    "-OoULRMPhVokgTCZ6oiR": {
+      "hum": 50,
+      "soil": 39,
+      "temp": 33.9,
+      "timestamp": 1774347470
+    },
+    "-OoUMo80ZR3hyjbW9kxZ": {
+      "co2": 601,
+      "hum": 52.1,
+      "lux": 530,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774347829,
+      "voltage": 12.4
+    },
+    "-OoUNizNoOpDjfn4PxSR": {
+      "hum": 60,
+      "soil": 24,
+      "temp": 28.7,
+      "timestamp": 1774348070
+    },
+    "-OoUP5zL8_sBVmSTVJln": {
+      "co2": 582,
+      "hum": 58.5,
+      "lux": 498,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774348431,
+      "voltage": 12.4
+    },
+    "-OoUQ0aOPNccU1t46hTK": {
+      "hum": 59,
+      "soil": 16,
+      "temp": 23.7,
+      "timestamp": 1774348671
+    },
+    "-OoUROdJBxBhl7JG4E8J": {
+      "co2": 591,
+      "hum": 59.7,
+      "lux": 487,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774349032,
+      "voltage": 12.4
+    },
+    "-OoUSJF_qPDEH7Q_Qgf4": {
+      "hum": 58,
+      "soil": 34,
+      "temp": 32.4,
+      "timestamp": 1774349272
+    },
+    "-OoUTgN2V4rWspa5-4Ov": {
+      "co2": 621,
+      "hum": 50,
+      "lux": 304,
+      "soil": 35,
+      "temp": 23.3,
+      "timestamp": 1774349633,
+      "voltage": 12.4
+    },
+    "-OoUUbLO_stDo7MCQhlN": {
+      "hum": 46,
+      "soil": 60,
+      "temp": 29,
+      "timestamp": 1774349874
+    },
+    "-OoUVzRP-1ZuNRvBF_x3": {
+      "co2": 560,
+      "hum": 59,
+      "lux": 227,
+      "soil": 45,
+      "temp": 29,
+      "timestamp": 1774350235,
+      "voltage": 12.4
+    },
+    "-OoUWtsDU56bRQttoh3p": {
+      "hum": 65,
+      "soil": 52,
+      "temp": 24.5,
+      "timestamp": 1774350474
+    },
+    "-OoUYGzWvHq8dvn8_7Ka": {
+      "co2": 428,
+      "hum": 51,
+      "lux": 604,
+      "soil": 50,
+      "temp": 26.2,
+      "timestamp": 1774350835,
+      "voltage": 12.4
+    },
+    "-OoUZBRozIdmpbA_ynSi": {
+      "hum": 59,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774351075
+    },
+    "-OoU_ZrASAmmQ4ZvHDJC": {
+      "co2": 604,
+      "hum": 56.9,
+      "lux": 476,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774351437,
+      "voltage": 12.4
+    },
+    "-OoUaTxMqeBH9_62hjJC": {
+      "hum": 70,
+      "soil": 27,
+      "temp": 30.2,
+      "timestamp": 1774351675
+    },
+    "-OoUbrfiTpg6PUdzPAer": {
+      "co2": 782,
+      "hum": 50,
+      "lux": 328,
+      "soil": 51,
+      "temp": 31.7,
+      "timestamp": 1774352038,
+      "voltage": 12.4
+    },
+    "-OoUclYyntcMDXWAwp5T": {
+      "hum": 55,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774352275
+    },
+    "-OoUe9W-w86upZN72wEI": {
+      "co2": 778,
+      "hum": 53,
+      "lux": 470,
+      "soil": 29,
+      "temp": 24,
+      "timestamp": 1774352640,
+      "voltage": 12.4
+    },
+    "-OoUf34wCqPCs6ROMb-A": {
+      "hum": 66,
+      "soil": 60,
+      "temp": 26,
+      "timestamp": 1774352875
+    },
+    "-OoUgSSfgqUlamJSfs3V": {
+      "co2": 856,
+      "hum": 58,
+      "lux": 467,
+      "soil": 25,
+      "temp": 27.4,
+      "timestamp": 1774353242,
+      "voltage": 12.4
+    },
+    "-OoUhLeZhoJ6x4_UsEmS": {
+      "hum": 56.4,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774353476
+    },
+    "-OoUijybokrJc1iBz0Mw": {
+      "co2": 926,
+      "hum": 44,
+      "lux": 261,
+      "soil": 32,
+      "temp": 25,
+      "timestamp": 1774353842,
+      "voltage": 12.4
+    },
+    "-OoUjdDaYa2INGC51406": {
+      "hum": 57.8,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774354076
+    },
+    "-OoUl1SwkmsPqyao2WAV": {
+      "co2": 518,
+      "hum": 47,
+      "lux": 547,
+      "soil": 18,
+      "temp": 32.2,
+      "timestamp": 1774354442,
+      "voltage": 12.4
+    },
+    "-OoUlw74pXL-nhEMxO4z": {
+      "hum": 55,
+      "soil": 19,
+      "temp": 29.9,
+      "timestamp": 1774354678
+    },
+    "-OoUnKINj04tlVrY-C7y": {
+      "co2": 613,
+      "hum": 58.5,
+      "lux": 542,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774355043,
+      "voltage": 12.4
+    },
+    "-OoUoDbzD9oWjQ0e1Mjk": {
+      "hum": 43,
+      "soil": 16,
+      "temp": 22.7,
+      "timestamp": 1774355278
+    },
+    "-OoUpbnEo7f4zkyqteG0": {
+      "co2": 765,
+      "hum": 50,
+      "lux": 335,
+      "soil": 60,
+      "temp": 30.9,
+      "timestamp": 1774355643,
+      "voltage": 12.4
+    },
+    "-OoUqW8hUEgnedj3Bd8R": {
+      "hum": 46,
+      "soil": 32,
+      "temp": 24.2,
+      "timestamp": 1774355878
+    },
+    "-OoUruM-p3YvGcQZMgAH": {
+      "co2": 722,
+      "hum": 63,
+      "lux": 678,
+      "soil": 28,
+      "temp": 31.9,
+      "timestamp": 1774356243,
+      "voltage": 12.4
+    },
+    "-OoUsnkBUZfMdcQiwZj8": {
+      "hum": 50.9,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774356479
+    },
+    "-OoUuBy7G-Wrb1FhxAPF": {
+      "co2": 620,
+      "hum": 56,
+      "lux": 697,
+      "soil": 30,
+      "temp": 33.7,
+      "timestamp": 1774356844,
+      "voltage": 12.4
+    },
+    "-OoUv5FP1iYFd7SxeiyX": {
+      "hum": 53.6,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774357079
+    },
+    "-OoUwUVlPM10gvhnsc4n": {
+      "co2": 469,
+      "hum": 50,
+      "lux": 353,
+      "soil": 21,
+      "temp": 23.7,
+      "timestamp": 1774357444,
+      "voltage": 12.4
+    },
+    "-OoUxNxJk337UdASjkM8": {
+      "hum": 67,
+      "soil": 54,
+      "temp": 23.2,
+      "timestamp": 1774357680
+    },
+    "-OoUymWS7LMewqiVte1c": {
+      "co2": 602,
+      "hum": 50.5,
+      "lux": 527,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774358046,
+      "voltage": 12.4
+    },
+    "-OoUzfbFdp2JR7ySPSjv": {
+      "hum": 50.2,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774358280
+    },
+    "-OoV0448eavUIYnDIiI7": {
+      "co2": 582,
+      "hum": 49,
+      "lux": 529,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774358646,
+      "voltage": 12.4
+    },
+    "-OoV0y5RD2-I1Q3SShyW": {
+      "hum": 58,
+      "soil": 23,
+      "temp": 29.9,
+      "timestamp": 1774358880
+    },
+    "-OoV2MYYIj7w9A_RNZ-h": {
+      "co2": 611,
+      "hum": 47.6,
+      "lux": 487,
+      "soil": 5,
+      "temp": 40,
+      "timestamp": 1774359247,
+      "voltage": 12.4
+    },
+    "-OoV3FdaLL2ROxFJH5A_": {
+      "hum": 45,
+      "soil": 45,
+      "temp": 28.3,
+      "timestamp": 1774359481
+    },
+    "-OoV4eCg54K-CR0b7L0c": {
+      "co2": 640,
+      "hum": 50,
+      "lux": 745,
+      "soil": 55,
+      "temp": 29.3,
+      "timestamp": 1774359847,
+      "voltage": 12.4
+    },
+    "-OoV5YL8eUYgtESv0H7u": {
+      "hum": 68,
+      "soil": 60,
+      "temp": 24.6,
+      "timestamp": 1774360081
+    },
+    "-OoV6wrD66h5a_aQY0_p": {
+      "co2": 670,
+      "hum": 64,
+      "lux": 254,
+      "soil": 51,
+      "temp": 23.2,
+      "timestamp": 1774360448,
+      "voltage": 12.4
+    },
+    "-OoV7pvSpCirIizZo25p": {
+      "hum": 62,
+      "soil": 21,
+      "temp": 27.2,
+      "timestamp": 1774360682
+    },
+    "-Opb0vTTPrk3QhnL-WGr": {
+      "co2": 461,
+      "hum": 47,
+      "lux": 539,
+      "soil": 46,
+      "temp": 24.4,
+      "timestamp": 1775550052,
+      "voltage": 12.4
+    },
+    "-Opb1vjpUS1sKTVrlq-M": {
+      "co2": 461,
+      "hum": 47,
+      "lux": 539,
+      "soil": 46,
+      "temp": 24.4,
+      "timestamp": 1775550315,
+      "voltage": 12.4
+    },
+    "-Opb4rtgB985Podm4qwg": {
+      "co2": 461,
+      "hum": 47,
+      "lux": 539,
+      "soil": 46,
+      "temp": 24.4,
+      "timestamp": 1775551086,
+      "voltage": 12.4
+    },
+    "-OpbIawg7_zcPPuN1QHd": {
+      "co2": 461,
+      "hum": 47,
+      "lux": 540,
+      "soil": 46,
+      "temp": 25,
+      "timestamp": 1775554686,
+      "voltage": 12.4
+    },
+    "-OpbWL6TPmohc_2TMxTX": {
+      "co2": 461,
+      "hum": 47,
+      "lux": 540,
+      "soil": 46,
+      "temp": 25,
+      "timestamp": 1775558287,
+      "voltage": 12.4
+    }
+  },
+  "Sensors": {
+    "CO2": 1244,
+    "humidity_inner": 0,
+    "humidity_outer": 29.95215,
+    "light_digital": 1,
+    "light_lux": 116,
+    "soil_moisture": 100,
+    "temp_inner": 0,
+    "temp_outer": 27.36,
+    "timestamp": 1777305170,
+    "voltage": 0
+  },
+  "Settings": {
+    "plants": [
+      "Salatalık 🥒",
+      "Domates 🍅"
+    ]
+  },
+  "System_Status": {
+    "error_log": "No errors",
+    "is_online": false,
+    "last_ping": "10-03-2026 11:30"
+  }
+}
