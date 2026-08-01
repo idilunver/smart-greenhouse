@@ -7,8 +7,6 @@ An AI-Powered IoT Monitoring and Autonomous Control System built with an **ESP32
 ### Live Web Demo
 [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen?style=for-the-badge&logo=google-chrome&logoColor=white)](https://idilunver.github.io/smart-greenhouse/)
 
-> [!NOTE]  
-> *The live web demo is hosted on GitHub Pages. Any updates pushed to the `gh-pages` branch will automatically reflect here.*
 
 ---
 
@@ -17,24 +15,6 @@ An AI-Powered IoT Monitoring and Autonomous Control System built with an **ESP32
 [![C++](https://img.shields.io/badge/C%2B%2B-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white)](https://isocpp.org)
 [![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com)
 [![Google Gemini](https://img.shields.io/badge/Google%20Gemini-8E75C2?style=for-the-badge&logo=google-gemini&logoColor=white)](https://deepmind.google/technologies/gemini)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-
-## 📌 Table of Contents
-- [Project Overview](#-project-overview)
-- [System Architecture](#%EF%B8%F0-system-architecture)
-- [Key Features](#-key-features)
-- [Project Structure](#-project-structure)
-- [Getting Started & Installation](#-getting-started--installation)
-  - [1. Firebase Setup](#1-firebase-setup)
-  - [2. Backend & Simulator Setup](#2-backend--simulator-setup)
-  - [3. Frontend Setup](#3-frontend-setup)
-  - [4. ESP32 Firmware Setup](#4-esp32-firmware-setup)
-- [Running the System](#-running-the-system)
-- [Analytics & Metrics Performance](#-analytics--metrics-performance)
-- [Web Deployment Guide](#-web-deployment-guide)
-- [License](#-license)
-
----
 
 ## Project Overview
 
@@ -210,7 +190,7 @@ class Env {
 
 ---
 
-## 🏃 Running the System
+## Running the System
 
 You can run the virtual simulator (digital twin) or connect the real ESP32 hardware to interact with the system.
 
