@@ -5,8 +5,13 @@ An AI-Powered IoT Monitoring and Autonomous Control System built with an **ESP32
 ---
 
 ### Live Web Demo
-🚀 **Live Demo:** [https://idilunver.github.io/smart-greenhouse/](https://idilunver.github.io/smart-greenhouse/)
+**Live Demo:** [https://idilunver.github.io/smart-greenhouse/](https://idilunver.github.io/smart-greenhouse/)
 
+> [!TIP]
+> **Test Giriş Bilgileri (Demo Credentials):**
+> Canlı web uygulamasını test ederken giriş yapabilmek için aşağıdaki test hesabını kullanabilirsiniz:
+> * **E-posta:** `admin@sera.com`
+> * **Şifre:** `123456`
 ---
 
 [![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
