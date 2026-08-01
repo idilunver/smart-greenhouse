@@ -5,10 +5,7 @@ An AI-Powered IoT Monitoring and Autonomous Control System built with an **ESP32
 ---
 
 ### Live Web Demo
-[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen?style=for-the-badge&logo=google-chrome&logoColor=white)](https://idilunver.github.io/smart-greenhouse/)
-
-> [!NOTE]  
-> *The live web demo is hosted on GitHub Pages. Any updates pushed to the `gh-pages` branch will automatically reflect here.*
+🚀 **Live Demo:** [https://idilunver.github.io/smart-greenhouse/](https://idilunver.github.io/smart-greenhouse/)
 
 ---
 
